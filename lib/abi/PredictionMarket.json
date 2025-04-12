@@ -1,0 +1,200 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "name": "countryId",
+          "type": "string"
+        },
+        {
+          "name": "direction",
+          "type": "bool"
+        },
+        {
+          "name": "leverage",
+          "type": "uint8"
+        }
+      ],
+      "name": "openPosition",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "positionId",
+          "type": "uint256"
+        }
+      ],
+      "name": "closePosition",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "positionId",
+          "type": "uint256"
+        },
+        {
+          "name": "takeProfit",
+          "type": "uint256"
+        },
+        {
+          "name": "stopLoss",
+          "type": "uint256"
+        }
+      ],
+      "name": "setTPSL",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "positionId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPosition",
+      "outputs": [
+        {
+          "components": [
+            {
+              "name": "positionId",
+              "type": "uint256"
+            },
+            {
+              "name": "countryId",
+              "type": "string"
+            },
+            {
+              "name": "trader",
+              "type": "address"
+            },
+            {
+              "name": "direction",
+              "type": "bool"
+            },
+            {
+              "name": "size",
+              "type": "uint256"
+            },
+            {
+              "name": "leverage",
+              "type": "uint8"
+            },
+            {
+              "name": "entryPrice",
+              "type": "uint256"
+            },
+            {
+              "name": "openTime",
+              "type": "uint256"
+            },
+            {
+              "name": "takeProfit",
+              "type": "uint256"
+            },
+            {
+              "name": "stopLoss",
+              "type": "uint256"
+            },
+            {
+              "name": "isOpen",
+              "type": "bool"
+            }
+          ],
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "positionId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "countryId",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "name": "trader",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "direction",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "name": "size",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "leverage",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "name": "entryPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "PositionOpened",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "positionId",
+          "type": "uint256"
+        }
+      ],
+      "name": "PositionClosed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "positionId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "takeProfit",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "stopLoss",
+          "type": "uint256"
+        }
+      ],
+      "name": "TPSLSet",
+      "type": "event"
+    }
+  ]
+}
