@@ -35,7 +35,7 @@ BeTheNation is a crypto-based trading platform allowing users to take long or sh
 1. Clone the repository:
 
    ```
-   git clone https://github.com/your-org/BeTheNation.git
+   git clone https://github.com/BeTheNation/Frontend.git
    cd BeTheNation
    ```
 
