@@ -1,30 +1,42 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, X, Home, BarChart2, Wallet, History, Settings } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { ConnectWalletButton } from "@/components/ui/connect-wallet-button"
-import { useWeb3 } from "@/hooks/useWeb3"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Menu,
+  X,
+  Home,
+  BarChart2,
+  Wallet,
+  History,
+  Settings,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ConnectWalletButton } from "@/components/ui/connect-wallet-button";
+import { useWeb3 } from "@/hooks/useWeb3";
 
-export default function MobileOptimizedLayout({ children }: { children: React.ReactNode }) {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const pathname = usePathname()
-  const { address, isConnected, disconnect } = useWeb3()
+export default function MobileOptimizedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const { address, isConnected, disconnect } = useWeb3();
 
   // Handle scroll events to change header appearance
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
+      setIsScrolled(window.scrollY > 10);
+    };
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navItems = [
     { name: "Home", href: "/", icon: Home },
@@ -32,18 +44,23 @@ export default function MobileOptimizedLayout({ children }: { children: React.Re
     { name: "Portfolio", href: "/portfolio", icon: Wallet },
     { name: "History", href: "/history", icon: History },
     { name: "Settings", href: "/settings", icon: Settings },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
       {/* Mobile Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? "bg-[#0D0D0D]/90 backdrop-blur-md shadow-md" : "bg-transparent"
+          isScrolled
+            ? "bg-[#0D0D0D]/90 backdrop-blur-md shadow-md"
+            : "bg-transparent"
         }`}
       >
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-white flex items-center">
+          <Link
+            href="/"
+            className="text-xl font-bold text-white flex items-center"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6 mr-2 text-blue-500"
@@ -72,20 +89,34 @@ export default function MobileOptimizedLayout({ children }: { children: React.Re
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[80%] sm:w-[350px] bg-[#0D0D0D] border-l border-[#333]">
+              <SheetContent
+                side="right"
+                className="w-[80%] sm:w-[350px] bg-[#0D0D0D] border-l border-[#333]"
+              >
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between py-4">
                     <span className="text-lg font-bold">Menu</span>
-                    <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
                       <X className="h-5 w-5" />
                     </Button>
                   </div>
 
                   {isConnected ? (
                     <div className="bg-[#1A1A1A] border border-[#333] rounded-lg p-4 mb-6">
-                      <div className="text-sm text-gray-400">Connected Wallet</div>
+                      <div className="text-sm text-gray-400">
+                        Connected Wallet
+                      </div>
                       <div className="font-medium truncate">{address}</div>
-                      <Button variant="outline" size="sm" className="mt-2 w-full" onClick={disconnect}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 w-full"
+                        onClick={disconnect}
+                      >
                         Disconnect
                       </Button>
                     </div>
@@ -101,7 +132,9 @@ export default function MobileOptimizedLayout({ children }: { children: React.Re
                         key={item.name}
                         href={item.href}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                          pathname === item.href ? "bg-blue-600 text-white" : "hover:bg-[#1A1A1A]"
+                          pathname === item.href
+                            ? "bg-blue-600 text-white"
+                            : "hover:bg-[#1A1A1A]"
                         }`}
                         onClick={() => setIsMenuOpen(false)}
                       >
@@ -142,5 +175,5 @@ export default function MobileOptimizedLayout({ children }: { children: React.Re
         </div>
       </nav>
     </div>
-  )
+  );
 }

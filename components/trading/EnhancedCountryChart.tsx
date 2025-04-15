@@ -178,20 +178,22 @@ export default function EnhancedCountryChart({
             <h3 className="text-lg font-medium">
               {countryName} Sentiment Analysis
             </h3>
-            <TabsList className="bg-[#262626]">
-              <TabsTrigger value="1M" onClick={() => setTimeframe("1M")}>
-                1M
-              </TabsTrigger>
-              <TabsTrigger value="3M" onClick={() => setTimeframe("3M")}>
-                3M
-              </TabsTrigger>
-              <TabsTrigger value="6M" onClick={() => setTimeframe("6M")}>
-                6M
-              </TabsTrigger>
-              <TabsTrigger value="1Y" onClick={() => setTimeframe("1Y")}>
-                1Y
-              </TabsTrigger>
-            </TabsList>
+            <Tabs defaultValue={timeframe}>
+              <TabsList className="bg-[#262626]">
+                <TabsTrigger value="1M" onClick={() => setTimeframe("1M")}>
+                  1M
+                </TabsTrigger>
+                <TabsTrigger value="3M" onClick={() => setTimeframe("3M")}>
+                  3M
+                </TabsTrigger>
+                <TabsTrigger value="6M" onClick={() => setTimeframe("6M")}>
+                  6M
+                </TabsTrigger>
+                <TabsTrigger value="1Y" onClick={() => setTimeframe("1Y")}>
+                  1Y
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           <div className="h-[500px] w-full">
