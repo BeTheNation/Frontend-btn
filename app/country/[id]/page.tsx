@@ -1,1013 +1,737 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCountryData } from "@/hooks/useCountryData";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { useFundingRate } from "@/hooks/useFundingRate";
-import { useWeb3 } from "@/hooks/useWeb3";
-import { formatCurrency } from "@/lib/utils";
-import { LineChart, Line, XAxis, ResponsiveContainer, Area } from "recharts";
-import { usePositionStore } from "@/store/positionStore";
-import { useState, useCallback } from "react";
+import Link from "next/link";
 import Image from "next/image";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
-export default function CountryPage() {
-  const { id } = useParams();
-  const { country, isLoading, error } = useCountryData(id as string);
-  const { fundingRate, timeUntilFunding } = useFundingRate(id as string);
-  const { balance, isConnected, address } = useWeb3();
-  const [tradeAmount, setTradeAmount] = useState(500);
-  const [multiplier, setMultiplier] = useState(1);
-  const [tradeDirection, setTradeDirection] = useState<"long" | "short">(
-    "long"
+// Sample country data - in a real app, this would come from an API
+const countryData = {
+  usa: {
+    name: "USA",
+    flagCode: "🇺🇸",
+    countryScore: 1839,
+    volume24h: "$1,500,000",
+    indexPrice: "$1,300,000",
+    sentiment: "Bullish",
+    changePercent: 3.2,
+    trend: "up",
+    markPrice: "$1,302,500",
+    fundingRate: "0.01%",
+    openInterest: "$7,500,000",
+    description:
+      "The United States economy is the world's largest by nominal GDP, characterized by high innovation, diverse sectors, and strong consumer spending. Recent fiscal policies have aimed to boost infrastructure and manufacturing.",
+    market: {
+      lastTradePrice: "$1,302,450",
+      bidPrice: "$1,302,400",
+      askPrice: "$1,302,600",
+      dayHigh: "$1,310,000",
+      dayLow: "$1,298,500",
+      volume: "$1,500,000",
+    },
+  },
+  germany: {
+    name: "Germany",
+    flagCode: "🇩🇪",
+    countryScore: 1200,
+    volume24h: "$800,000",
+    indexPrice: "$1,100,000",
+    sentiment: "Bearish",
+    changePercent: -1.8,
+    trend: "down",
+    markPrice: "$1,098,000",
+    fundingRate: "-0.005%",
+    openInterest: "$3,200,000",
+    description:
+      "Germany has Europe's largest economy, with a strong focus on manufacturing, exports and innovation. Recent challenges include energy transition and supply chain disruptions.",
+    market: {
+      lastTradePrice: "$1,097,850",
+      bidPrice: "$1,097,800",
+      askPrice: "$1,098,100",
+      dayHigh: "$1,105,000",
+      dayLow: "$1,095,200",
+      volume: "$800,000",
+    },
+  },
+  japan: {
+    name: "Japan",
+    flagCode: "🇯🇵",
+    countryScore: 1600,
+    volume24h: "$1,050,000",
+    indexPrice: "$950,000",
+    sentiment: "Bearish",
+    changePercent: 0.5,
+    trend: "up",
+    markPrice: "$950,500",
+    fundingRate: "0.003%",
+    openInterest: "$2,800,000",
+    description:
+      "Japan's economy is highly industrialized and known for its technological innovation. The country faces challenges from an aging population and has implemented various stimulus measures to boost growth.",
+    market: {
+      lastTradePrice: "$950,450",
+      bidPrice: "$950,300",
+      askPrice: "$950,600",
+      dayHigh: "$952,300",
+      dayLow: "$948,100",
+      volume: "$1,050,000",
+    },
+  },
+};
+
+// Sample positions data
+const samplePositions = [
+  {
+    id: "pos-1",
+    country: "USA",
+    direction: "LONG",
+    size: "$5,000",
+    leverage: "5x",
+    entryPrice: "$1,298,500",
+    markPrice: "$1,302,500",
+    pnl: "+$154",
+    pnlPercent: "+3.08%",
+    liquidationPrice: "$1,233,575",
+  },
+];
+
+const CountryPage = () => {
+  const params = useParams();
+  const countryId = typeof params.id === "string" ? params.id : "";
+
+  const [country, setCountry] = useState(countryData.usa);
+  const [positions, setPositions] = useState(samplePositions);
+  const [tradeAmount, setTradeAmount] = useState("1000");
+  const [leverage, setLeverage] = useState(5);
+  const [tradeDirection, setTradeDirection] = useState<"long" | "short" | null>(
+    null
   );
 
-  // Generate chart data with realistic GDP patterns and strong uptrend
-  const generateChartData = useCallback(() => {
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-
-    // Generate a more pronounced uptrend with more curvature
-    return months.map((month, index) => {
-      // Create a stronger uptrend with more pronounced curves
-      const progress = index / (months.length - 1);
-      const uptrend = 100 + progress * 90; // Stronger uptrend base
-
-      // Add more pronounced wave pattern for better visualization
-      const wave = Math.sin(index / 1.2) * 20;
-
-      // Ensure overall trend is up with more curves
-      return {
-        name: month,
-        value: uptrend + wave + (index > 8 ? 18 : 0), // Extra boost toward end
-      };
-    });
-  }, [id]);
-
-  const chartData = generateChartData();
-
-  // Generate diverse leaderboard data
-  const leaderboardData = [
-    {
-      rank: 1,
-      user: "0xRafi",
-      amount: 250000,
-      avatar: "/placeholder-user.jpg",
-    },
-    {
-      rank: 2,
-      user: "0xJulia",
-      amount: 12000,
-      avatar: "/placeholder-user.jpg",
-    },
-    { rank: 3, user: "0xMark", amount: 10000, avatar: "/placeholder-user.jpg" },
-    {
-      rank: 167,
-      user: "You",
-      amount: 1000,
-      avatar: "/placeholder-user.jpg",
-      isCurrentUser: true,
-    },
-  ];
-
-  // Generate realistic position data
-  const positions = [
-    {
-      name: country?.name || "Thailand",
-      pnl: -0.34,
-      pnlPercent: -0.02,
-      size: 500,
-      entryPrice: 3.87,
-      liquidationPrice: 8.58,
-      fees: 2.5,
-    },
-    {
-      name: "Abstract",
-      pnl: 0.34,
-      pnlPercent: 0.5,
-      size: 100,
-      entryPrice: 2.1,
-      liquidationPrice: 4.2,
-      fees: 1.2,
-    },
-  ];
-
-  // Calculate liquidation price based on direction and multiplier
-  const calculateLiquidationPrice = useCallback(() => {
-    if (!country) return "5.41";
-
-    const liquidationThreshold = 1 / multiplier;
-    if (tradeDirection === "long") {
-      return (country.markPrice * (1 - liquidationThreshold)).toFixed(2);
-    } else {
-      return (country.markPrice * (1 + liquidationThreshold)).toFixed(2);
+  useEffect(() => {
+    // In a real app, fetch the country data based on the ID
+    if (countryId && countryData[countryId as keyof typeof countryData]) {
+      setCountry(countryData[countryId as keyof typeof countryData]);
     }
-  }, [country, multiplier, tradeDirection]);
+  }, [countryId]);
 
-  // Format numbers with commas for better readability
-  const formatNumber = (num) => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const closePosition = (positionId: string) => {
+    setPositions(positions.filter((p) => p.id !== positionId));
   };
 
-  // Handle position menu actions
-  const handlePositionAction = (action: string, position: any) => {
-    switch (action) {
-      case "close":
-        alert(`Closing position for ${position.name}`);
-        break;
-      case "modify":
-        alert(`Modify position for ${position.name}`);
-        break;
-      case "details":
-        alert(`Viewing details for ${position.name}`);
-        break;
-    }
-  };
-
-  // Handle place trade action
   const handlePlaceTrade = () => {
-    if (!isConnected) {
-      alert("Please connect your wallet to place a trade.");
-      return;
-    }
+    if (!tradeDirection) return;
 
-    alert(
-      `Placing ${tradeDirection} trade for ${formatNumber(
-        tradeAmount
-      )} USD with ${multiplier}x leverage`
-    );
+    // In a real app, this would connect to a smart contract to place the trade
+    const newPosition = {
+      id: `pos-${Date.now()}`,
+      country: country.name,
+      direction: tradeDirection === "long" ? "LONG" : "SHORT",
+      size: `$${tradeAmount}`,
+      leverage: `${leverage}x`,
+      entryPrice: country.market.lastTradePrice,
+      markPrice: country.markPrice,
+      pnl: "+$0",
+      pnlPercent: "0.00%",
+      liquidationPrice: "$0",
+    };
+
+    setPositions([...positions, newPosition]);
+    setTradeDirection(null);
   };
-
-  // Generate country region based on id to ensure consistency
-  const getCountryRegion = (countryId: string) => {
-    const id = Number(countryId);
-    // Assign appropriate regions based on country ID
-    if (id === 1) return "North America";
-    if (id === 2) return "East Asia";
-    if (id === 3) return "Europe";
-    if (id === 4) return "Europe";
-    if (id === 5) return "Southeast Asia";
-    return "Southeast Asia"; // Default
-  };
-
-  const getCountryGdpRank = (countryId: string) => {
-    const id = Number(countryId);
-    // Assign GDP ranks based on country ID
-    if (id === 1) return "#1";
-    if (id === 2) return "#2";
-    if (id === 3) return "#4";
-    if (id === 4) return "#7";
-    if (id === 5) return "#21";
-    return "#25"; // Default
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#141414] text-white p-5">
-        <div className="flex justify-between items-center py-6 px-6 border-b border-[#222]">
-          <div></div>
-          <h1 className="text-3xl font-bold tracking-tight">Country Detail</h1>
-          <div className="w-[120px]"></div>
-        </div>
-
-        <div className="max-w-6xl mx-auto mt-8 space-y-6">
-          <Skeleton className="h-20 w-full bg-gray-800" />
-          <Skeleton className="h-[300px] w-full bg-gray-800" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-48 w-full bg-gray-800" />
-            <Skeleton className="h-48 w-full bg-gray-800" />
-            <Skeleton className="h-48 w-full bg-gray-800" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#141414] text-white p-5 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">
-            Error Loading Country Data
-          </h1>
-          <p>{error || "An unknown error occurred"}</p>
-          <Button className="mt-6" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-[#141414] text-white">
-      {/* Header - Remove title and connected user display */}
-      <div className="flex justify-between items-center py-6 px-6 border-b border-[#222]">
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Country Stats Overview */}
-        <div className="mb-8 p-6 bg-[#191919] rounded-lg border border-[#333] shadow-lg">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <div className="flex items-center">
-              <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-white/10 mr-5 flex-shrink-0">
+    <div className="min-h-screen bg-black text-white">
+      {/* Top navigation bar */}
+      <header className="border-b border-gray-800/50 py-4 px-6">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard/trading-platform"
+              className="flex items-center gap-2"
+            >
+              <div className="h-10 w-10 rounded-full bg-amber-600/30 flex items-center justify-center">
                 <Image
-                  src={country.flagUrl || "/placeholder.svg"}
-                  alt={country.name}
-                  width={64}
-                  height={64}
+                  src="/placeholder-logo.svg"
+                  alt="BeTheNation.Fun"
+                  width={28}
+                  height={28}
+                />
+              </div>
+              <h1 className="text-xl font-semibold">BeTheNation.Fun</h1>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-gray-700 overflow-hidden">
+                <Image
+                  src="/placeholder-user.jpg"
+                  alt="User"
+                  width={32}
+                  height={32}
                   className="object-cover"
                 />
               </div>
-              <div>
-                <h2 className="text-3xl font-bold">{country.name}</h2>
-                <div className="flex items-center gap-2 mt-2 text-sm">
-                  <span className="text-gray-400">
-                    {getCountryRegion(id as string)}
-                  </span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-amber-400 font-medium">
-                    GDP Rank: {getCountryGdpRank(id as string)}
-                  </span>
-                </div>
-              </div>
+              <span className="text-gray-300">0xAhmadTaufiq</span>
             </div>
+          </div>
+        </div>
+      </header>
 
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full mt-6 md:mt-0">
-              <div className="flex items-center justify-between p-4 bg-[#151515] rounded-lg border border-[#222222]">
-                <div className="flex items-center">
-                  <div className="h-9 w-9 rounded-full bg-green-500/10 flex items-center justify-center mr-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-green-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400">Open Trades</div>
-                    <div className="font-bold">${formatNumber(28800)}</div>
-                  </div>
-                </div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  className="w-4 h-4 text-gray-500"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v4M12 16h.01" />
-                </svg>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-[#151515] rounded-lg border border-[#222222]">
-                <div className="flex items-center">
-                  <div className="h-9 w-9 rounded-full bg-blue-500/10 flex items-center justify-center mr-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-blue-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400">Volume</div>
-                    <div className="font-bold">${formatNumber(200000)}</div>
-                  </div>
-                </div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  className="w-4 h-4 text-gray-500"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v4M12 16h.01" />
-                </svg>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-[#151515] rounded-lg border border-[#222222]">
-                <div className="flex items-center">
-                  <div className="h-9 w-9 rounded-full bg-amber-500/10 flex items-center justify-center mr-3">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-amber-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400">
-                      Funding/Cooldown
-                    </div>
-                    <div className="flex items-center">
-                      <span className="font-bold text-green-400 mr-2">
-                        +0.300%
-                      </span>
-                      <span className="text-xs text-gray-300">
-                        {timeUntilFunding || "00:37:40"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  className="w-4 h-4 text-gray-500"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v4M12 16h.01" />
-                </svg>
-              </div>
+      {/* Page content */}
+      <div className="max-w-7xl mx-auto py-6 px-6">
+        {/* Back button and country title */}
+        <div className="flex items-center mb-8">
+          <Link
+            href="/dashboard/trading-platform"
+            className="flex items-center text-gray-400 hover:text-white mr-4"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-5 h-5 mr-1"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+              />
+            </svg>
+            Back
+          </Link>
+          <div className="flex items-center">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-800 mr-3">
+              <span className="text-lg">{country.flagCode}</span>
+            </div>
+            <h1 className="text-2xl font-bold">{country.name} Economy Index</h1>
+            <div
+              className={`ml-4 px-3 py-1 rounded-md text-sm font-medium ${
+                country.trend === "up"
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-red-500/20 text-red-400"
+              }`}
+            >
+              {country.trend === "up" ? "+" : ""}
+              {country.changePercent}%
             </div>
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left and Center Columns */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Chart Card */}
-            <Card className="bg-[#191919] border-[#333] shadow-lg">
-              <CardHeader className="border-b border-[#333] pb-3 flex flex-row justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-xl font-medium">
-                    Live Countryscore
-                  </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-4 h-4 text-gray-400"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 8v4M12 16h.01" />
-                  </svg>
+        {/* Main content grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left column - Chart and market data */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Chart card */}
+            <div className="bg-[#141414] border border-gray-800/50 rounded-xl p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    {country.name} Performance
+                  </h2>
+                  <p className="text-sm text-gray-400">Economic Index</p>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                  >
-                    <circle cx="12" cy="5" r="1" />
-                    <circle cx="12" cy="12" r="1" />
-                    <circle cx="12" cy="19" r="1" />
-                  </svg>
-                </Button>
-              </CardHeader>
-              <CardContent className="p-5 bg-[#151515] relative h-[320px]">
-                <div className="absolute top-3 right-4 bg-[#191919]/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2 z-10 shadow-md">
-                  <div className="text-sm text-green-400 font-medium">
-                    +{(country.changePercent || 3.45).toFixed(2)}%
-                  </div>
-                  <div className="text-xs text-gray-400">24h</div>
+                <div className="flex space-x-2">
+                  <button className="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-1 rounded-md">
+                    1H
+                  </button>
+                  <button className="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-1 rounded-md">
+                    1D
+                  </button>
+                  <button className="bg-blue-600 text-xs px-3 py-1 rounded-md">
+                    1W
+                  </button>
+                  <button className="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-1 rounded-md">
+                    1M
+                  </button>
+                  <button className="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-1 rounded-md">
+                    1Y
+                  </button>
                 </div>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <defs>
-                      <linearGradient
-                        id="colorGradient"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="#4AFF3A"
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#4AFF3A"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="name"
-                      stroke="#444"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 12 }}
-                      padding={{ left: 10, right: 10 }}
+              </div>
+
+              {/* Price chart */}
+              <div className="h-64 w-full relative mb-6">
+                {/* This would be replaced with a real chart library like recharts or Chart.js */}
+                <svg
+                  className="w-full h-full"
+                  viewBox="0 0 600 200"
+                  fill="none"
+                  preserveAspectRatio="none"
+                >
+                  {/* Chart grid lines */}
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="600"
+                    y2="0"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="0"
+                    y1="50"
+                    x2="600"
+                    y2="50"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="0"
+                    y1="100"
+                    x2="600"
+                    y2="100"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="0"
+                    y1="150"
+                    x2="600"
+                    y2="150"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="0"
+                    y1="200"
+                    x2="600"
+                    y2="200"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="200"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="120"
+                    y1="0"
+                    x2="120"
+                    y2="200"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="240"
+                    y1="0"
+                    x2="240"
+                    y2="200"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="360"
+                    y1="0"
+                    x2="360"
+                    y2="200"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="480"
+                    y1="0"
+                    x2="480"
+                    y2="200"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+                  <line
+                    x1="600"
+                    y1="0"
+                    x2="600"
+                    y2="200"
+                    stroke="#333"
+                    strokeWidth="1"
+                  />
+
+                  {/* Chart line for the country performance */}
+                  <path
+                    d="M0 120C20 110 40 100 60 105C80 110 100 130 120 120C140 110 160 90 180 70C200 50 220 40 240 45C260 50 280 70 300 80C320 90 340 100 360 90C380 80 400 60 420 50C440 40 460 30 480 40C500 50 520 80 540 70C560 60 580 50 600 40"
+                    stroke={country.trend === "up" ? "#22C55E" : "#EF4444"}
+                    strokeWidth="3"
+                    fill="none"
+                  />
+
+                  {/* Gradient fill underneath the line */}
+                  <linearGradient
+                    id="gradientFill"
+                    x1="0%"
+                    y1="0%"
+                    x2="0%"
+                    y2="100%"
+                  >
+                    <stop
+                      offset="0%"
+                      stopColor={country.trend === "up" ? "#22C55E" : "#EF4444"}
+                      stopOpacity="0.3"
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#4AFF3A"
-                      strokeWidth={3}
-                      dot={false}
-                      activeDot={{ r: 6, fill: "#4AFF3A" }}
+                    <stop
+                      offset="100%"
+                      stopColor={country.trend === "up" ? "#22C55E" : "#EF4444"}
+                      stopOpacity="0"
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      fill="url(#colorGradient)"
-                      stroke="none"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+                  </linearGradient>
+                  <path
+                    d="M0 120C20 110 40 100 60 105C80 110 100 130 120 120C140 110 160 90 180 70C200 50 220 40 240 45C260 50 280 70 300 80C320 90 340 100 360 90C380 80 400 60 420 50C440 40 460 30 480 40C500 50 520 80 540 70C560 60 580 50 600 40 L600 200 L0 200Z"
+                    fill="url(#gradientFill)"
+                  />
+                </svg>
 
-            {/* Bottom Panels - 3 Columns with uniform height and styling */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* About Panel */}
-              <Card className="bg-[#191919] border-[#333] shadow-lg h-[300px]">
-                <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-[#333]">
-                  <CardTitle className="text-lg font-medium">About</CardTitle>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                    >
-                      <circle cx="12" cy="5" r="1" />
-                      <circle cx="12" cy="12" r="1" />
-                      <circle cx="12" cy="19" r="1" />
-                    </svg>
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-5 text-sm text-gray-300 overflow-auto h-[calc(300px-56px)]">
-                  <p>
-                    {country.name === "China" ? (
-                      <>
-                        China, an East Asian country, has the world's
-                        second-largest economy driven by manufacturing,
-                        technology, and exports. It is a global leader in
-                        electronics production and infrastructure development.
-                        Beijing serves as the capital, with a strong
-                        manufacturing base and growing middle class driving
-                        economic growth.
-                      </>
-                    ) : country.name === "United States" ? (
-                      <>
-                        The United States, a North American country, has the
-                        world's largest economy driven by technology, finance,
-                        and services. It is a global leader in innovation,
-                        research, and development. Washington D.C. serves as the
-                        capital, with strong tech sectors and global financial
-                        influence throughout the nation.
-                      </>
-                    ) : country.name === "Japan" ? (
-                      <>
-                        Japan, an East Asian island nation, has the world's
-                        third-largest economy driven by automotive, electronics,
-                        and robotics industries. It is known for technological
-                        innovation and precision manufacturing. Tokyo serves as
-                        the economic hub, with a high-tech industry and
-                        international trade network.
-                      </>
-                    ) : country.name === "Germany" ? (
-                      <>
-                        Germany, a Western European country, has a robust
-                        economy driven by automotive, machinery, and chemical
-                        industries. It is known for engineering excellence and
-                        export-oriented manufacturing. Berlin serves as the
-                        capital, with a strong manufacturing prowess and
-                        export-oriented economy.
-                      </>
-                    ) : country.name === "Thailand" ? (
-                      <>
-                        Thailand, a Southeast Asian country, has a diverse
-                        economy driven by industries such as manufacturing,
-                        agriculture, and tourism. It is one of the world's
-                        largest exporters of electronics, automobiles, and
-                        agricultural products like rice and rubber. Bangkok
-                        serves as the economic hub, while the nation benefits
-                        from a strong tourism sector.
-                      </>
-                    ) : (
-                      <>
-                        {country.name}, a {getCountryRegion(id as string)}{" "}
-                        country, has a diverse economy with various sectors
-                        contributing to its GDP growth. It maintains a presence
-                        in global markets through trade and economic
-                        partnerships, with ongoing development in multiple
-                        industries supporting its economic output.
-                      </>
-                    )}
-                  </p>
-                </CardContent>
-              </Card>
+                {/* Time labels */}
+                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <span>Mar 1</span>
+                  <span>Mar 8</span>
+                  <span>Mar 15</span>
+                  <span>Mar 22</span>
+                  <span>Mar 29</span>
+                  <span>Apr 5</span>
+                </div>
 
-              {/* Leaderboard Panel */}
-              <Card className="bg-[#191919] border-[#333] shadow-lg h-[300px]">
-                <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-[#333]">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg font-medium">
-                      Leaderboard
-                    </CardTitle>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4 text-gray-400"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 8v4M12 16h.01" />
-                    </svg>
+                {/* Price labels */}
+                <div className="absolute top-0 right-0 h-full flex flex-col justify-between text-xs text-gray-500 py-1">
+                  <span>$1,350,000</span>
+                  <span>$1,325,000</span>
+                  <span>$1,300,000</span>
+                  <span>$1,275,000</span>
+                  <span>$1,250,000</span>
+                </div>
+              </div>
+
+              {/* Market stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-[#1a1a1a] p-3 rounded-lg">
+                  <div className="text-xs text-gray-400 mb-1">Mark Price</div>
+                  <div className="font-medium">{country.markPrice}</div>
+                </div>
+                <div className="bg-[#1a1a1a] p-3 rounded-lg">
+                  <div className="text-xs text-gray-400 mb-1">Funding Rate</div>
+                  <div className="font-medium">{country.fundingRate}</div>
+                </div>
+                <div className="bg-[#1a1a1a] p-3 rounded-lg">
+                  <div className="text-xs text-gray-400 mb-1">
+                    Open Interest
                   </div>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                    >
-                      <circle cx="12" cy="5" r="1" />
-                      <circle cx="12" cy="12" r="1" />
-                      <circle cx="12" cy="19" r="1" />
-                    </svg>
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-5 overflow-auto h-[calc(300px-56px)]">
-                  <div className="space-y-3">
-                    <div className="text-xs text-gray-400 mb-1">
-                      You are ranked 167th in {country.name}
-                    </div>
-                    {leaderboardData.map((item) => (
-                      <div
-                        key={item.rank}
-                        className={`flex items-center justify-between p-2 rounded-md ${
-                          item.isCurrentUser
-                            ? "bg-blue-900/20 border border-blue-800/30"
-                            : "hover:bg-gray-800/30"
-                        } transition-colors duration-150 cursor-pointer`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`text-gray-400 text-xs px-1.5 py-0.5 rounded ${
-                              item.rank === 1
-                                ? "bg-yellow-500/20 text-yellow-300"
-                                : item.rank === 2
-                                ? "bg-gray-500/20 text-gray-300"
-                                : item.rank === 3
-                                ? "bg-amber-600/20 text-amber-400"
-                                : "bg-gray-800"
-                            }`}
-                          >
-                            #{item.rank}
-                          </div>
-                          <div className="h-6 w-6 rounded-full bg-gray-700 overflow-hidden">
-                            <Image
-                              src={item.avatar}
-                              alt={`${item.user} avatar`}
-                              width={24}
-                              height={24}
-                              className="object-cover"
-                            />
-                          </div>
-                          <div
-                            className={`text-white ${
-                              item.isCurrentUser ? "font-semibold" : ""
-                            }`}
-                          >
-                            {item.user}
-                          </div>
-                        </div>
-                        <div
-                          className={`${
-                            item.rank === 1 ? "text-green-500" : "text-white"
-                          } font-medium`}
-                        >
-                          ${formatNumber(item.amount)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                  <div className="font-medium">{country.openInterest}</div>
+                </div>
+              </div>
+            </div>
 
-              {/* Positions Panel */}
-              <Card className="bg-[#191919] border-[#333] shadow-lg h-[300px]">
-                <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0 border-b border-[#333]">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg font-medium">
-                      Positions
-                    </CardTitle>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4 text-gray-400"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 8v4M12 16h.01" />
-                    </svg>
-                  </div>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                    >
-                      <circle cx="12" cy="5" r="1" />
-                      <circle cx="12" cy="12" r="1" />
-                      <circle cx="12" cy="19" r="1" />
-                    </svg>
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-5 overflow-auto h-[calc(300px-56px)]">
-                  {positions.length > 0 ? (
-                    <div className="space-y-4 text-sm">
-                      {positions.map((position, index) => (
-                        <div
-                          key={index}
-                          className="p-3 bg-[#151515] rounded-lg border border-gray-700/30 space-y-2 hover:border-gray-600/50 transition-colors duration-200"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                            <div className="text-white font-medium">
-                              {position.name}
-                            </div>
-                            <div
-                              className={`ml-auto ${
-                                position.pnl >= 0
-                                  ? "text-green-400"
-                                  : "text-red-400"
-                              } font-medium`}
-                            >
-                              ${position.pnl.toFixed(2)} (
-                              {position.pnlPercent >= 0 ? "+" : ""}
-                              {position.pnlPercent}%)
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                className="w-3 h-3"
-                              >
-                                <circle cx="12" cy="5" r="1" />
-                                <circle cx="12" cy="12" r="1" />
-                                <circle cx="12" cy="19" r="1" />
-                              </svg>
-                            </Button>
-                          </div>
+            {/* Market information */}
+            <div className="bg-[#141414] border border-gray-800/50 rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4">Market Information</h2>
 
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">
-                                Position Size
-                              </span>
-                              <span className="text-white font-medium">
-                                ${position.size.toFixed(2)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Entry Price</span>
-                              <span className="text-white font-medium">
-                                {position.entryPrice.toFixed(2)}M USD
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400 flex items-center">
-                                Liquidation
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  className="w-3 h-3 ml-1"
-                                >
-                                  <circle cx="12" cy="12" r="10" />
-                                  <path d="M12 8v4M12 16h.01" />
-                                </svg>
-                              </span>
-                              <span className="text-white font-medium">
-                                {position.liquidationPrice.toFixed(2)}M USD
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Fees</span>
-                              <span className="text-white font-medium">
-                                ${position.fees.toFixed(2)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-gray-400 h-full flex flex-col items-center justify-center">
-                      <p>You don't have any open positions yet.</p>
-                      <Button
-                        variant="link"
-                        onClick={() => (window.location.href = `/dashboard`)}
-                        className="text-blue-400 mt-2"
-                      >
-                        Explore Markets
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-400 mb-2">
+                  About {country.name} Economy
+                </h3>
+                <p className="text-sm text-gray-300">{country.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <div>
+                  <div className="text-sm text-gray-400 mb-1">
+                    Last Trade Price
+                  </div>
+                  <div className="font-medium">
+                    {country.market.lastTradePrice}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-400 mb-1">24h Volume</div>
+                  <div className="font-medium">{country.volume24h}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-400 mb-1">Bid Price</div>
+                  <div className="font-medium">{country.market.bidPrice}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-400 mb-1">Ask Price</div>
+                  <div className="font-medium">{country.market.askPrice}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-400 mb-1">24h High</div>
+                  <div className="font-medium">{country.market.dayHigh}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-400 mb-1">24h Low</div>
+                  <div className="font-medium">{country.market.dayLow}</div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Right Column - Trading Panel */}
-          <div className="lg:col-span-1">
-            <Card className="bg-[#191919] border-[#333] lg:sticky lg:top-4 shadow-lg">
-              <CardHeader className="border-b border-[#333] pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-medium">
-                    Trade {country.name}
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      className="w-4 h-4"
+          {/* Right column - Trading panel and positions */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Trading panel */}
+            <div className="bg-[#141414] border border-gray-800/50 rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4">Place Trade</h2>
+
+              {/* Direction selection */}
+              <div className="flex justify-between items-center mb-6">
+                <button
+                  className={`w-1/2 py-3 rounded-l-md font-medium text-center transition-colors ${
+                    tradeDirection === "long"
+                      ? "bg-green-600 text-white"
+                      : "bg-[#1a1a1a] text-gray-300 hover:bg-[#222]"
+                  }`}
+                  onClick={() => setTradeDirection("long")}
+                >
+                  LONG
+                </button>
+                <button
+                  className={`w-1/2 py-3 rounded-r-md font-medium text-center transition-colors ${
+                    tradeDirection === "short"
+                      ? "bg-red-600 text-white"
+                      : "bg-[#1a1a1a] text-gray-300 hover:bg-[#222]"
+                  }`}
+                  onClick={() => setTradeDirection("short")}
+                >
+                  SHORT
+                </button>
+              </div>
+
+              {/* Amount input */}
+              <div className="mb-6">
+                <label className="block text-sm text-gray-400 mb-2">
+                  Amount (USD)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tradeAmount}
+                    onChange={(e) => setTradeAmount(e.target.value)}
+                    className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-2">
+                    <button
+                      className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded"
+                      onClick={() => setTradeAmount("1000")}
                     >
-                      <circle cx="12" cy="5" r="1" />
-                      <circle cx="12" cy="12" r="1" />
-                      <circle cx="12" cy="19" r="1" />
-                    </svg>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-5 space-y-6">
-                {/* Market Label and Current Price */}
-                <div className="space-y-2">
-                  <div className="text-sm text-gray-300 uppercase tracking-wider font-medium bg-[#222] inline-block px-3 py-1 rounded-md">
-                    Market
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-300">
-                      Current Price:
-                    </span>
-                    <span className="text-lg font-semibold">
-                      {(country.markPrice / 1000 || 3.87).toFixed(2)}M USD
-                    </span>
+                      $1K
+                    </button>
+                    <button
+                      className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded"
+                      onClick={() => setTradeAmount("5000")}
+                    >
+                      $5K
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                {/* Long/Short Buttons */}
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant={tradeDirection === "long" ? "default" : "outline"}
-                    className={`py-3 h-14 ${
-                      tradeDirection === "long"
-                        ? "bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-900/30"
-                        : "bg-[#222] border-gray-700 text-gray-300 hover:bg-gray-800"
-                    }`}
-                    onClick={() => setTradeDirection("long")}
+              {/* Leverage slider */}
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm text-gray-400">Leverage</label>
+                  <span className="text-sm font-medium">{leverage}x</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={leverage}
+                    onChange={(e) => setLeverage(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-full appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>1x</span>
+                    <span>5x</span>
+                    <span>10x</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trade details */}
+              <div className="bg-[#1a1a1a] p-4 rounded-md mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-400">Entry Price</span>
+                  <span className="font-medium">
+                    {country.market.lastTradePrice}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-400">Position Size</span>
+                  <span className="font-medium">
+                    ${parseInt(tradeAmount) * leverage}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">
+                    Est. Liquidation Price
+                  </span>
+                  {tradeDirection === "long" && (
+                    <span className="font-medium">
+                      $
+                      {(
+                        parseInt(
+                          country.market.lastTradePrice.replace(/[^0-9]/g, "")
+                        ) * 0.95
+                      ).toLocaleString()}
+                    </span>
+                  )}
+                  {tradeDirection === "short" && (
+                    <span className="font-medium">
+                      $
+                      {(
+                        parseInt(
+                          country.market.lastTradePrice.replace(/[^0-9]/g, "")
+                        ) * 1.05
+                      ).toLocaleString()}
+                    </span>
+                  )}
+                  {!tradeDirection && <span className="font-medium">-</span>}
+                </div>
+              </div>
+
+              {/* Trade button */}
+              <button
+                className={`w-full py-3 rounded-md font-medium text-center transition-colors ${
+                  !tradeDirection
+                    ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                    : tradeDirection === "long"
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "bg-red-600 hover:bg-red-700 text-white"
+                }`}
+                disabled={!tradeDirection}
+                onClick={handlePlaceTrade}
+              >
+                {!tradeDirection
+                  ? "Select Direction"
+                  : tradeDirection === "long"
+                  ? "Open Long Position"
+                  : "Open Short Position"}
+              </button>
+            </div>
+
+            {/* Positions */}
+            <div className="bg-[#141414] border border-gray-800/50 rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4">Your Positions</h2>
+
+              {positions.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-10 h-10 mx-auto mb-2 opacity-50"
                   >
-                    <div className="flex flex-col items-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        className="h-4 w-4 mb-1"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 10l7-7m0 0l7 7m-7-7v18"
-                        />
-                      </svg>
-                      <span>Long</span>
-                    </div>
-                  </Button>
-                  <Button
-                    variant={tradeDirection === "short" ? "default" : "outline"}
-                    className={`py-3 h-14 ${
-                      tradeDirection === "short"
-                        ? "bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-900/30"
-                        : "bg-[#222] border-gray-700 text-gray-300 hover:bg-gray-800"
-                    }`}
-                    onClick={() => setTradeDirection("short")}
-                  >
-                    <div className="flex flex-col items-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        className="h-4 w-4 mb-1"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                        />
-                      </svg>
-                      <span>Short</span>
-                    </div>
-                  </Button>
-                </div>
-
-                {/* Balance Card */}
-                <div className="bg-[#151515] p-4 rounded-lg border border-gray-800">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Your Balance:</span>
-                    <div className="flex items-center">
-                      <span className="font-semibold">
-                        {isConnected
-                          ? `$${
-                              balance
-                                ? parseFloat(balance.formatted).toFixed(2)
-                                : "0.00"
-                            }`
-                          : "$0.00"}
-                      </span>
-                      <Button
-                        variant="link"
-                        className="text-blue-400 font-semibold p-0 h-auto text-sm ml-2"
-                        onClick={() =>
-                          !isConnected
-                            ? (window.location.href = "/dashboard")
-                            : null
-                        }
-                      >
-                        {isConnected ? "Deposit Funds" : "Connect"}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="mt-2 flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Currency:</span>
-                    <span className="text-sm bg-blue-900/30 text-blue-400 px-3 py-1 rounded font-medium">
-                      USDC
-                    </span>
-                  </div>
-                </div>
-
-                {/* Amount Slider */}
-                <div className="space-y-4 py-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm text-gray-400 font-medium">
-                      Amount:
-                    </label>
-                    <span className="text-sm font-medium bg-gray-800 px-2 py-0.5 rounded">
-                      ${formatNumber(tradeAmount)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Slider
-                      value={[tradeAmount]}
-                      max={10000}
-                      min={100}
-                      step={100}
-                      className="flex-1 mr-4"
-                      onValueChange={(values) => setTradeAmount(values[0])}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5"
                     />
+                  </svg>
+                  <p>No open positions</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {positions.map((position) => (
                     <div
-                      className="bg-blue-600 text-white text-xs font-semibold h-6 w-6 flex items-center justify-center rounded cursor-pointer"
-                      onClick={() =>
-                        setMultiplier(multiplier < 5 ? multiplier + 1 : 1)
-                      }
+                      key={position.id}
+                      className="bg-[#1a1a1a] p-4 rounded-md"
                     >
-                      x{multiplier}
-                    </div>
-                  </div>
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center">
+                          <div
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              position.direction === "LONG"
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
+                            {position.direction}
+                          </div>
+                          <span className="ml-2 font-medium">
+                            {position.country}
+                          </span>
+                        </div>
+                        <button
+                          className="text-red-400 hover:text-red-300"
+                          onClick={() => closePosition(position.id)}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
 
-                  <div className="flex justify-between text-xs text-gray-500 px-1">
-                    <span>$100</span>
-                    <span>$5,000</span>
-                    <span>$10,000</span>
-                  </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">
+                        <div>
+                          <div className="text-xs text-gray-400">Size</div>
+                          <div className="font-medium">
+                            {position.size} ({position.leverage})
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400">PnL</div>
+                          <div
+                            className={`font-medium ${
+                              position.pnl.startsWith("+")
+                                ? "text-green-400"
+                                : position.pnl.startsWith("-")
+                                ? "text-red-400"
+                                : ""
+                            }`}
+                          >
+                            {position.pnl} ({position.pnlPercent})
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400">
+                            Entry Price
+                          </div>
+                          <div className="font-medium">
+                            {position.entryPrice}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400">
+                            Mark Price
+                          </div>
+                          <div className="font-medium">
+                            {position.markPrice}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs text-gray-400">
+                        <span>Liq. Price: {position.liquidationPrice}</span>
+                        <button className="text-blue-400 hover:text-blue-300">
+                          Edit Position
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Trade Details */}
-                <div className="space-y-4 pt-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-[#222] p-3 rounded-lg text-center border border-gray-700">
-                      <div className="text-xs text-gray-400 mb-1">
-                        Entry Price
-                      </div>
-                      <div className="font-semibold">
-                        {(country.markPrice / 1000 || 3.87).toFixed(2)}M
-                      </div>
-                    </div>
-                    <div className="bg-[#222] p-3 rounded-lg text-center border border-gray-700">
-                      <div className="text-xs text-gray-400 mb-1">
-                        Liquidation at
-                      </div>
-                      <div className="font-semibold">
-                        {calculateLiquidationPrice()}M
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#222] p-4 rounded-lg border border-gray-700">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-400">Potential Profit</span>
-                      <span className="text-green-400 font-medium">
-                        up to ${formatNumber(tradeAmount * multiplier * 0.5)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Max Loss</span>
-                      <span className="text-red-400 font-medium">
-                        ${formatNumber(tradeAmount)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button
-                    className={`w-full py-6 text-white font-medium ${
-                      !isConnected
-                        ? "bg-gray-600 hover:bg-gray-700"
-                        : "bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-900/20"
-                    }`}
-                    onClick={handlePlaceTrade}
-                  >
-                    {isConnected
-                      ? `Place ${
-                          tradeDirection === "long" ? "Buy" : "Sell"
-                        } Order`
-                      : "Connect Wallet to Trade"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default CountryPage;
