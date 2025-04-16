@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { CountryData } from "@/app/dashboard/trading-platform";
 
 // Sample country data - in a real app, this would come from an API
 const countryData = {
@@ -98,6 +99,7 @@ const samplePositions = [
 const CountryPage = () => {
   const params = useParams();
   const countryId = typeof params.id === "string" ? params.id : "";
+  const router = useRouter();
 
   const [country, setCountry] = useState(countryData.usa);
   const [positions, setPositions] = useState(samplePositions);
@@ -140,68 +142,42 @@ const CountryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Top navigation bar */}
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 text-white">
+      {/* Header */}
       <header className="border-b border-gray-800/50 py-4 px-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard/trading-platform"
-              className="flex items-center gap-2"
-            >
-              <div className="h-10 w-10 rounded-full bg-amber-600/30 flex items-center justify-center">
-                <Image
-                  src="/placeholder-logo.svg"
-                  alt="BeTheNation.Fun"
-                  width={28}
-                  height={28}
-                />
-              </div>
-              <h1 className="text-xl font-semibold">BeTheNation.Fun</h1>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-gray-700 overflow-hidden">
-                <Image
-                  src="/placeholder-user.jpg"
-                  alt="User"
-                  width={32}
-                  height={32}
-                  className="object-cover"
-                />
-              </div>
-              <span className="text-gray-300">0xAhmadTaufiq</span>
-            </div>
-          </div>
+          <Link
+            href="/dashboard"
+            className="flex items-center text-xl font-bold text-amber-500"
+          ></Link>
         </div>
       </header>
 
-      {/* Page content */}
-      <div className="max-w-7xl mx-auto py-6 px-6">
-        {/* Back button and country title */}
-        <div className="flex items-center mb-8">
-          <Link
-            href="/dashboard/trading-platform"
-            className="flex items-center text-gray-400 hover:text-white mr-4"
+      <div className="max-w-7xl mx-auto pt-8 px-6">
+        {/* Back button */}
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center mb-6 text-gray-400 hover:text-white transition-colors"
+        >
+          <svg
+            className="w-4 h-4 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
               strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5 mr-1"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-              />
-            </svg>
-            Back
-          </Link>
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Back to Dashboard
+        </Link>
+
+        {/* Country details */}
+        <div className="flex items-center mb-8">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-800 mr-3">
               <span className="text-lg">{country.flagCode}</span>
