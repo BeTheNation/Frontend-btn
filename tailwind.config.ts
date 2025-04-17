@@ -90,7 +90,7 @@ const config: Config = {
               'accordion-up': 'accordion-up 0.2s ease-out'
           },
       letterSpacing: {
-        '-3': '-3%'  // Menambahkan nilai -3% ke dalam letterSpacing
+        '-3': '-3%'  // Adds -3% to letterSpacing
       }
       }
   },
