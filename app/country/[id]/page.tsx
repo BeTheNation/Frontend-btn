@@ -22,7 +22,7 @@ const countryData = {
     sentiment: "Bullish",
     changePercent: 3.2,
     trend: "up",
-    markPrice: "$1,302,500",
+    markPrice: "3.87M",
     fundingRate: "0.01%",
     openInterest: "$7,500,000",
     openTrades: "$120,800",
@@ -31,6 +31,7 @@ const countryData = {
     fundingPercent: "0.3000%",
     description:
       "The USA is one of the largest and most influential economies globally, driven by a diverse range of sectors including technology, finance, and consumer goods. With a CountryScore of 1,839, the U.S. reflects a strong economic performance, supported by GDP growth, low unemployment, and a stable inflation rate. The market is dominated by robust stock exchanges such as the S&P 500 and NASDAQ, which are major indicators of global investor sentiment.",
+    liquidationPrice: "5.41M",
   },
 };
 
@@ -72,7 +73,7 @@ export default function CountryPage() {
             <div className="text-center">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-black text-xs">•</span>
+                  <span className="text-black text-xs font-bold">$</span>
                 </div>
                 <span className="text-gray-400 text-sm">Open Trades</span>
               </div>
@@ -82,7 +83,7 @@ export default function CountryPage() {
             <div className="text-center">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-black text-xs">•</span>
+                  <span className="text-black text-xs font-bold">V</span>
                 </div>
                 <span className="text-gray-400 text-sm">Volumes</span>
               </div>
@@ -92,7 +93,7 @@ export default function CountryPage() {
             <div className="text-center">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-black text-xs">•</span>
+                  <span className="text-black text-xs font-bold">%</span>
                 </div>
                 <span className="text-gray-400 text-sm">Funding/Cooldown</span>
               </div>
@@ -135,8 +136,13 @@ export default function CountryPage() {
                     x2="0%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor="#1EFA10" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#1EFA10" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#1EFA10" stopOpacity="0.7" />
+                    <stop offset="30%" stopColor="#1EFA10" stopOpacity="0.4" />
+                    <stop
+                      offset="100%"
+                      stopColor="#1EFA10"
+                      stopOpacity="0.05"
+                    />
                   </linearGradient>
                 </defs>
               </svg>
@@ -159,13 +165,13 @@ export default function CountryPage() {
               <button
                 className={`flex-1 py-3 px-6 rounded-full flex items-center justify-center ${
                   direction === "long"
-                    ? "bg-[#0AE88C] text-white"
+                    ? "bg-[#00E084] text-white"
                     : "text-gray-400"
                 }`}
                 onClick={() => setDirection("long")}
               >
                 <svg
-                  className="w-4 h-4 mr-1"
+                  className="w-5 h-5 mr-2"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -174,7 +180,7 @@ export default function CountryPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M5 15l7-7 7 7"
+                    d="M7 11l5-5 5 5"
                   />
                 </svg>
                 Long
@@ -188,7 +194,7 @@ export default function CountryPage() {
                 onClick={() => setDirection("short")}
               >
                 <svg
-                  className="w-4 h-4 mr-1"
+                  className="w-5 h-5 mr-2"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -197,7 +203,7 @@ export default function CountryPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
+                    d="M7 13l5 5 5-5"
                   />
                 </svg>
                 Short
@@ -229,22 +235,47 @@ export default function CountryPage() {
 
             <div className="flex justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-white rounded-full"></div>
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="black"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="8" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                </div>
                 <div className="text-xs">
                   <div className="text-gray-400">Size = Entry Price</div>
-                  <div className="text-white">$500 at {country.markPrice}M</div>
+                  <div className="text-white">$500 at {country.markPrice}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-white rounded-full"></div>
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="black"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="8" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                </div>
                 <div className="text-xs">
                   <div className="text-gray-400">Liquidated at</div>
-                  <div className="text-white">{country.liquidationPrice}M</div>
+                  <div className="text-white">{country.liquidationPrice}</div>
                 </div>
               </div>
             </div>
 
-            <button className="w-full py-3 bg-[#1a7cff] text-white rounded-md font-medium">
+            <button className="w-full py-3 bg-[#1a7cff] text-white rounded-md font-medium shadow-lg hover:bg-blue-500 transition-colors">
               Place Trade
             </button>
           </div>
@@ -298,53 +329,91 @@ export default function CountryPage() {
               </button>
             </div>
 
-            <p className="text-gray-500 mb-3 border-b border-[#222222] pb-3">
+            <p className="text-gray-500 mb-4 border-b border-[#222222] pb-3">
               You are ranked 167th in Indonesia
             </p>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-sm">Rank #1</span>
-                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-700">
-                    {/* Use placeholder.jpg if no actual images */}
+            <div className="space-y-0">
+              {/* User 1 */}
+              <div className="py-3 border-b border-[#222222]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-500 text-sm w-14">Rank #1</span>
+                    <div className="w-6 h-6 rounded-full overflow-hidden">
+                      <Image
+                        src="/sarah.jpg"
+                        alt="Profile 1"
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-white text-sm">0xMeilline</span>
                   </div>
-                  <span className="text-white text-sm">0xMeilline</span>
+                  <span className="text-[#1EFA10]">$250,000</span>
                 </div>
-                <span className="text-green-500">$250,000</span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-sm">Rank #2</span>
-                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-700">
-                    {/* Use placeholder.jpg if no actual images */}
+              {/* User 2 */}
+              <div className="py-3 border-b border-[#222222]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-500 text-sm w-14">Rank #2</span>
+                    <div className="w-6 h-6 rounded-full overflow-hidden">
+                      <Image
+                        src="/john.jpg"
+                        alt="Profile 2"
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-white text-sm">0xClara</span>
                   </div>
-                  <span className="text-white text-sm">0xClara</span>
+                  <span className="text-[#1EFA10]">$12,000</span>
                 </div>
-                <span className="text-green-500">$12,000</span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-sm">Rank #3</span>
-                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-700">
-                    {/* Use placeholder.jpg if no actual images */}
+              {/* User 3 */}
+              <div className="py-3 border-b border-[#222222]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-500 text-sm w-14">Rank #3</span>
+                    <div className="w-6 h-6 rounded-full overflow-hidden">
+                      <Image
+                        src="/david.jpg"
+                        alt="Profile 3"
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-white text-sm">0xEdward</span>
                   </div>
-                  <span className="text-white text-sm">0xEdward</span>
+                  <span className="text-[#1EFA10]">$10,000</span>
                 </div>
-                <span className="text-green-500">$10,000</span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-sm">Rank #167</span>
-                  <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-700">
-                    {/* Use placeholder.jpg if no actual images */}
+              {/* User 167 */}
+              <div className="pt-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-500 text-sm w-14">
+                      Rank #167
+                    </span>
+                    <div className="w-6 h-6 rounded-full overflow-hidden">
+                      <Image
+                        src="/placeholder-user.jpg"
+                        alt="Profile 4"
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-white text-sm">0xCeline</span>
                   </div>
-                  <span className="text-white text-sm">0xCeline</span>
+                  <span className="text-[#1EFA10]">$1,000</span>
                 </div>
-                <span className="text-green-500">$1,000</span>
               </div>
             </div>
           </div>
