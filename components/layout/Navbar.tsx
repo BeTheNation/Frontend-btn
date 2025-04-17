@@ -35,7 +35,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center space-x-6">
-          {/* <div className="hidden md:flex space-x-6">
+          <div className="hidden md:flex space-x-6">
             <NavLink
               href="/dashboard"
               active={pathname === "/dashboard"}
@@ -51,7 +51,7 @@ export default function Navbar() {
               active={pathname === "/history"}
               text="History"
             />
-          </div> */}
+          </div>
           <ConnectWalletButton />
         </div>
       </div>
