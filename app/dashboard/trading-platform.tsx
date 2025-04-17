@@ -46,7 +46,7 @@ const countryData: CountryData[] = [
     countryScore: 1600,
     volume24h: "$1,050,000",
     indexPrice: "$950,000",
-    sentiment: "Neutral",
+    sentiment: "Bearish",
     changePercent: 0.5,
     trend: "up",
   },
@@ -162,95 +162,57 @@ export default function TradingPlatform() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header with search */}
-      <div className="bg-black border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold text-amber-500">
-            {/* Removed BeTheNation.Fun text */}
-          </Link>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search countries"
-              className="bg-gray-900 border border-gray-700 rounded-full px-4 py-2 pl-10 pr-4 w-64 focus:outline-none focus:ring-1 focus:ring-amber-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <svg
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
-      </div>
-
       {/* Tab selection */}
-      <div className="border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex space-x-4">
-            <button
-              className={`py-4 px-4 font-medium text-sm relative ${
-                activeTab === "Country"
-                  ? "text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
-              onClick={() => setActiveTab("Country")}
-            >
-              Country
-              {activeTab === "Country" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500"></div>
-              )}
-            </button>
-            <button
-              className={`py-4 px-4 font-medium text-sm relative ${
-                activeTab === "Sport"
-                  ? "text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
-              onClick={() => setActiveTab("Sport")}
-            >
-              Sport
-              {activeTab === "Sport" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500"></div>
-              )}
-            </button>
-          </div>
+      <div className="pt-4 pb-2 px-4">
+        <div className="flex space-x-4">
+          <button
+            className={`py-2 px-6 text-sm font-medium rounded-full border ${
+              activeTab === "Country"
+                ? "border-white bg-transparent text-white"
+                : "border-gray-700 text-gray-500 hover:text-gray-300"
+            }`}
+            onClick={() => setActiveTab("Country")}
+          >
+            {activeTab === "Country" && <span className="mr-2">✓</span>}
+            Country
+          </button>
+          <button
+            className={`py-2 px-6 text-sm font-medium rounded-full border ${
+              activeTab === "Sport"
+                ? "border-white bg-transparent text-white"
+                : "border-gray-700 text-gray-500 hover:text-gray-300"
+            }`}
+            onClick={() => setActiveTab("Sport")}
+          >
+            Sport
+          </button>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredCountries.map((country) => (
             <Link
               key={country.id}
               href={`/country/${country.id}`}
               className="block"
             >
-              <div className="bg-gray-900 rounded-xl overflow-hidden hover:bg-gray-800 transition duration-200 h-full">
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <div className="text-2xl mr-3">{country.flagCode}</div>
-                      <div className="font-medium">{country.name}</div>
+              <div className="bg-[#111111] rounded-2xl overflow-hidden border border-[#222222] h-full">
+                <div className="p-4">
+                  {/* Country header */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="text-2xl">{country.flagCode}</div>
+                      <div className="font-medium text-white">
+                        {country.name}
+                      </div>
                     </div>
                     <div
-                      className={`px-2 py-1 rounded-md text-xs font-medium ${
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         country.trend === "up"
-                          ? "bg-green-500/20 text-green-400"
-                          : "bg-red-500/20 text-red-400"
+                          ? "bg-green-700 text-green-400"
+                          : "bg-red-700 text-red-500"
                       }`}
                     >
                       {country.trend === "up" ? "+" : ""}
@@ -258,32 +220,35 @@ export default function TradingPlatform() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  {/* Country data */}
+                  <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <div className="text-gray-400 text-sm">CountryScore:</div>
-                      <div className="font-medium">
+                      <div className="text-gray-500">CountryScore :</div>
+                      <div className="font-medium text-white text-right">
                         {country.countryScore.toLocaleString()}
                       </div>
                     </div>
                     <div className="flex justify-between">
-                      <div className="text-gray-400 text-sm">24H Volume:</div>
-                      <div className="font-medium">{country.volume24h}</div>
-                    </div>
-                    <div className="flex justify-between">
-                      <div className="text-gray-400 text-sm">Index Price:</div>
-                      <div className="font-medium">{country.indexPrice}</div>
-                    </div>
-                    <div className="flex justify-between">
-                      <div className="text-gray-400 text-sm">
-                        Market Sentiment:
+                      <div className="text-gray-500">24H Volume :</div>
+                      <div className="font-medium text-white text-right">
+                        {country.volume24h}
                       </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="text-gray-500">Index Price :</div>
+                      <div className="font-medium text-white text-right">
+                        {country.indexPrice}
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="text-gray-500">Market Sentiment :</div>
                       <div
-                        className={`font-medium ${
+                        className={`font-medium text-right ${
                           country.sentiment === "Bullish"
                             ? "text-green-400"
                             : country.sentiment === "Bearish"
-                            ? "text-red-400"
-                            : ""
+                            ? "text-red-500"
+                            : "text-gray-300" // For Neutral
                         }`}
                       >
                         {country.sentiment}
@@ -291,8 +256,9 @@ export default function TradingPlatform() {
                     </div>
                   </div>
 
-                  <div className="mt-5">
-                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition">
+                  {/* Trade button */}
+                  <div className="mt-4">
+                    <button className="w-full bg-[#1E6FF7] hover:bg-blue-700 text-white py-2 rounded-full text-sm font-medium transition">
                       Trade Now
                     </button>
                   </div>
