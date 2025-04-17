@@ -33,7 +33,6 @@ export default function Navbar() {
             BeTheNation.fun
           </Link>
         </div>
-
         <div className="flex items-center space-x-6">
           <div className="hidden md:flex space-x-6">
             <NavLink
