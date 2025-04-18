@@ -36,7 +36,7 @@ BeTheNation is a crypto-based trading platform allowing users to take long or sh
 
    ```
    git clone https://github.com/BeTheNation/Frontend.git
-   cd BeTheNation
+   cd Frontend
    ```
 
 2. Install dependencies:
