@@ -3,10 +3,25 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useDemoMode } from "@/hooks/useDemoMode";
 import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 
 export function ConnectWalletButton() {
   const { isDemoMode } = useDemoMode();
   const { toast } = useToast();
+  const router = useRouter();
+  const { isConnected } = useAccount();
+  const [wasConnected, setWasConnected] = useState(false);
+
+  // Track connection state changes to detect when a user has just connected
+  useEffect(() => {
+    if (isConnected && !wasConnected) {
+      // User just connected their wallet
+      router.push("/dashboard");
+    }
+    setWasConnected(isConnected);
+  }, [isConnected, wasConnected, router]);
 
   const handleBeforeConnect = () => {
     if (isDemoMode) {

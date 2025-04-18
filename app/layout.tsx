@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import Navbar from "@/components/layout/Navbar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { WalletRedirectHandler } from "@/components/WalletRedirectHandler";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({
           <ThemeProvider>
             <div className="min-h-screen bg-[#111213] text-white">
               <Navbar />
+              <WalletRedirectHandler />
               <main className="container mx-auto px-4 py-8">{children}</main>
             </div>
           </ThemeProvider>
