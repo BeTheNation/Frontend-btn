@@ -4,7 +4,7 @@ export function formatCurrency(amount: number): string {
     currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount)
+  }).format(amount);
 }
 
 export function formatDate(date: Date): string {
@@ -12,9 +12,20 @@ export function formatDate(date: Date): string {
     year: "numeric",
     month: "short",
     day: "numeric",
-  })
+  });
 }
 
 export function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ")
+  return classes.filter(Boolean).join(" ");
+}
+
+/**
+ * Generate a unique random ID for positions and trades
+ */
+export function generateId(): string {
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15) +
+    Date.now().toString(36)
+  );
 }

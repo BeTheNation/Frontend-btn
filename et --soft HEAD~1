@@ -1,0 +1,30 @@
+[33mfe20316[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32madd[m[33m, [m[1;31morigin/fitur-login[m[33m, [m[1;32mfitur-login[m[33m)[m Tambah fitur login
+[33ma84c404[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m update app/country
+[33mef1f9ad[m update positions
+[33m0c45161[m update connectwallet -> dashboard
+[33m61fdcce[m create .env.example
+[33mbcd3c87[m Update README.md
+[33m2a4d8af[m Merge pull request #6 from BeTheNation/new-landingpage
+[33m87898c8[m Update tailwind.config.ts
+[33m785d758[m Merge branch 'main' into new-landingpage
+[33m4422f48[m New Landing Page
+[33mf539ad7[m New Landing Page
+[33mf416e7a[m update ui
+[33m6f49db8[m update ui
+[33mbebc54a[m update ui
+[33m590fb11[m update ui
+[33mb85886f[m Merge pull request #5 from BeTheNation/feature/landing-page-redesign
+[33mb204721[m update dashboard and trading plartform ui
+[33m1741164[m Merge pull request #4 from BeTheNation/feature/landing-page-redesign
+[33m0ec86f5[m update dashboard and detail
+[33m15d1932[m Merge pull request #3 from BeTheNation/feature/landing-page-redesign
+[33m6c7e5b0[m Redesign landing page with modern UI and improved sections
+[33mc19434d[m Merge pull request #2 from BeTheNation/feature/initial-upload
+[33m795be22[m Initial frontend implementation with trading dashboard, country details, and position management
+[33mb470b98[m Fix: Added missing Header and Container components
+[33m8181c1f[m Merge pull request #1 from BeTheNation/fix-readme-urls
+[33m212aa50[m Fix repository URL in README.md clone instructions
+[33m6a95a8a[m Initial public push – clean & ready for collaboration
+[33m33450a8[m Add .env.example template
+[33m9e191ca[m Add LICENSE and .env.example files
+[33m5be1bb7[m Initial commit: BeTheNation trading platform frontend
