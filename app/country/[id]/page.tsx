@@ -10,6 +10,10 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useCountryData } from "@/hooks/useCountryData";
 import { useWeb3 } from "@/hooks/useWeb3";
+import { CountryPositionsList } from "@/components/trading/CountryPositionsList";
+import { useContract } from "@/hooks/useContract";
+import { useToast } from "@/components/ui/use-toast";
+import { usePositionCreation } from "@/hooks/usePositionCreation";
 
 // Sample country data - in a real app, this would come from an API
 const countryData = {
@@ -43,11 +47,18 @@ export default function CountryPage() {
   const [direction, setDirection] = useState<"long" | "short">("long");
   const [leverage, setLeverage] = useState(1);
   const [amount, setAmount] = useState(500);
+  const { toast } = useToast();
+  const { createPosition, isProcessing } = usePositionCreation();
 
   const [country, setCountry] = useState(countryData.usa);
 
   // Calculate position size based on leverage and amount
   const positionSize = amount * leverage;
+
+  // Convert string price to number for calculations
+  const currentPrice = country?.markPrice
+    ? parseFloat(country.markPrice as string)
+    : 0;
 
   // Format the balance for display
   const formattedBalance =
@@ -67,8 +78,65 @@ export default function CountryPage() {
     }
   }, [countryId]);
 
+  // Handle submitting a new trade
+  const handlePlaceTrade = async () => {
+    if (!isConnected || !isAmountValid || isProcessing) return;
+
+    try {
+      // Show loading toast
+      toast({
+        title: "Processing Trade",
+        description: "Your transaction is being processed...",
+      });
+
+      // Create a new position
+      const result = await createPosition(
+        countryId,
+        country.name,
+        direction,
+        amount,
+        leverage,
+        currentPrice,
+        currentPrice
+      );
+
+      if (result?.success) {
+        // Clear the form or update UI as needed
+        // No need for additional toast as the createPosition function handles it
+      }
+    } catch (error: any) {
+      toast({
+        title: "Trade Failed",
+        description:
+          error.message || "Failed to place trade. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 bg-black min-h-screen">
+      {/* Back to Dashboard button */}
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center px-4 py-2 mb-4 text-gray-400 hover:text-white bg-[#111111] rounded-lg"
+      >
+        <svg
+          className="w-5 h-5 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back To Dashboard
+      </Link>
+
       <div className="space-y-4">
         {/* Header Panel */}
         <div className="bg-[#111111] rounded-xl p-4 flex items-center justify-between">
@@ -250,7 +318,6 @@ export default function CountryPage() {
                 <span className="text-white">nUSDC</span>
               </div>
             </div>
-
             <div className="mb-4">
               <Slider
                 defaultValue={[leverage]}
@@ -310,16 +377,19 @@ export default function CountryPage() {
 
             <button
               className={`w-full py-3 rounded-md font-medium shadow-lg transition-colors ${
-                isConnected && isAmountValid
+                isConnected && isAmountValid && !isProcessing
                   ? "bg-[#1a7cff] text-white hover:bg-blue-500"
                   : "bg-gray-600 text-gray-300 cursor-not-allowed"
               }`}
-              disabled={!isConnected || !isAmountValid}
+              disabled={!isConnected || !isAmountValid || isProcessing}
+              onClick={handlePlaceTrade}
             >
               {!isConnected
                 ? "Connect Wallet to Trade"
                 : !isAmountValid
                 ? "Insufficient Balance"
+                : isProcessing
+                ? "Processing..."
                 : "Place Trade"}
             </button>
           </div>
@@ -483,41 +553,10 @@ export default function CountryPage() {
               </button>
             </div>
 
-            <div>
-              <div className="flex items-center gap-2 pb-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="text-white">USA</div>
-                <div className="ml-auto text-red-500">-$0.24 (-0.0%)</div>
-              </div>
-
-              <div className="border-t border-[#222222] py-3">
-                <div className="flex justify-between text-sm py-1">
-                  <div className="text-gray-400">Position Size</div>
-                  <div className="text-white">$1,750</div>
-                </div>
-
-                <div className="flex justify-between text-sm py-1">
-                  <div className="text-gray-400">Entry Price</div>
-                  <div className="text-white">3.87M</div>
-                </div>
-
-                <div className="flex justify-between text-sm py-1">
-                  <div className="text-gray-400">Liquidation Price</div>
-                  <div className="text-white">8.58M</div>
-                </div>
-
-                <div className="flex justify-between text-sm py-1">
-                  <div className="text-gray-400">Fees</div>
-                  <div className="text-white">$2.50</div>
-                </div>
-              </div>
-
-              <div className="border-t border-[#222222] pt-3 flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="text-gray-400">Abstract</div>
-                <div className="ml-auto text-green-500">$0.24 (+0.5%)</div>
-              </div>
-            </div>
+            <CountryPositionsList
+              countryId={countryId}
+              currentPrice={currentPrice}
+            />
           </div>
         </div>
       </div>
