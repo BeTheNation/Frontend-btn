@@ -318,7 +318,6 @@ export default function CountryPage() {
                 <span className="text-white">nUSDC</span>
               </div>
             </div>
-            {/* p */}
             <div className="mb-4">
               <Slider
                 defaultValue={[leverage]}
