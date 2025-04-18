@@ -54,6 +54,15 @@ export default function CountryPage() {
 
   return (
     <div className="container mx-auto p-4 bg-black min-h-screen">
+      {/* Add Back To Dashboard button */}
+      <div className="mb-4">
+        <Link href="/dashboard" className="inline-flex items-center px-4 py-2 text-gray-400 hover:text-white bg-[#111111] rounded-lg">
+          <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back To Dashboard
+        </Link>
+      </div>
       <div className="space-y-4">
         {/* Header Panel */}
         <div className="bg-[#111111] rounded-xl p-4 flex items-center justify-between">
