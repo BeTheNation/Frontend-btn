@@ -439,8 +439,40 @@ export default function CountryPage() {
               </button>
             </div>
 
-            <div className="h-full flex items-center justify-center min-h-[200px]">
-              <p className="text-gray-500">No active positions</p>
+            <div>
+              <div className="flex items-center gap-2 pb-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="text-white">USA</div>
+                <div className="ml-auto text-red-500">-$0.24 (-0.0%)</div>
+              </div>
+
+              <div className="border-t border-[#222222] py-3">
+                <div className="flex justify-between text-sm py-1">
+                  <div className="text-gray-400">Position Size</div>
+                  <div className="text-white">$1,750</div>
+                </div>
+
+                <div className="flex justify-between text-sm py-1">
+                  <div className="text-gray-400">Entry Price</div>
+                  <div className="text-white">3.87M</div>
+                </div>
+
+                <div className="flex justify-between text-sm py-1">
+                  <div className="text-gray-400">Liquidation Price</div>
+                  <div className="text-white">8.58M</div>
+                </div>
+
+                <div className="flex justify-between text-sm py-1">
+                  <div className="text-gray-400">Fees</div>
+                  <div className="text-white">$2.50</div>
+                </div>
+              </div>
+
+              <div className="border-t border-[#222222] pt-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="text-gray-400">Abstract</div>
+                <div className="ml-auto text-green-500">$0.24 (+0.5%)</div>
+              </div>
             </div>
           </div>
         </div>
