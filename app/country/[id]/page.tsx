@@ -42,8 +42,23 @@ export default function CountryPage() {
   const { isConnected, balance } = useWeb3();
   const [direction, setDirection] = useState<"long" | "short">("long");
   const [leverage, setLeverage] = useState(1);
+  const [amount, setAmount] = useState(500);
 
   const [country, setCountry] = useState(countryData.usa);
+
+  // Calculate position size based on leverage and amount
+  const positionSize = amount * leverage;
+
+  // Format the balance for display
+  const formattedBalance =
+    isConnected && balance ? parseFloat(balance.formatted).toFixed(2) : "0.00";
+
+  // Convert formatted balance to number for validation
+  const numericBalance =
+    isConnected && balance ? parseFloat(balance.formatted) : 0;
+
+  // Check if the amount exceeds the balance
+  const isAmountValid = amount <= numericBalance;
 
   useEffect(() => {
     // In a real app, fetch the country data based on the ID
@@ -212,12 +227,28 @@ export default function CountryPage() {
 
             <h3 className="text-white font-medium mb-2">Market</h3>
             <div className="flex justify-between mb-4">
-              <span className="text-gray-400">Balance : $9,894</span>
+              <span className="text-gray-400">
+                Balance :{" "}
+                {isConnected && balance ? `$${formattedBalance}` : "$0.00"}
+              </span>
               <button className="text-blue-400 text-sm">Deposit Funds</button>
             </div>
 
-            <div className="bg-[#1A1A1A] rounded-md p-3 flex justify-center mb-4">
-              <span className="text-white">nUSDC</span>
+            <div className="bg-[#1A1A1A] rounded-md p-3 flex justify-between items-center mb-4">
+              <span className="text-gray-400">Amount</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) =>
+                    setAmount(Math.max(0, parseFloat(e.target.value) || 0))
+                  }
+                  className={`bg-transparent text-right w-24 outline-none ${
+                    isAmountValid ? "text-white" : "text-red-500"
+                  }`}
+                />
+                <span className="text-white">nUSDC</span>
+              </div>
             </div>
 
             <div className="mb-4">
@@ -251,7 +282,9 @@ export default function CountryPage() {
                 </div>
                 <div className="text-xs">
                   <div className="text-gray-400">Size = Entry Price</div>
-                  <div className="text-white">$500 at {country.markPrice}</div>
+                  <div className="text-white">
+                    ${positionSize} at {country.markPrice}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -275,8 +308,19 @@ export default function CountryPage() {
               </div>
             </div>
 
-            <button className="w-full py-3 bg-[#1a7cff] text-white rounded-md font-medium shadow-lg hover:bg-blue-500 transition-colors">
-              Place Trade
+            <button
+              className={`w-full py-3 rounded-md font-medium shadow-lg transition-colors ${
+                isConnected && isAmountValid
+                  ? "bg-[#1a7cff] text-white hover:bg-blue-500"
+                  : "bg-gray-600 text-gray-300 cursor-not-allowed"
+              }`}
+              disabled={!isConnected || !isAmountValid}
+            >
+              {!isConnected
+                ? "Connect Wallet to Trade"
+                : !isAmountValid
+                ? "Insufficient Balance"
+                : "Place Trade"}
             </button>
           </div>
         </div>
