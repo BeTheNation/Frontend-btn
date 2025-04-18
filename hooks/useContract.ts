@@ -9,7 +9,7 @@ import {
   validateContractAddress,
 } from "@/lib/contracts/PredictionMarket";
 import type { Position } from "@/lib/contracts/types";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/utils/use-toast";
 import { useCountries, type Country } from "@/hooks/useCountries";
 import { useDemoModeContext } from "@/contexts/DemoModeContext";
 import { ContractService } from "@/services/contract";

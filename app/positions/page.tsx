@@ -3,12 +3,12 @@
 import React, { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Container } from "@/components/layout/container";
-import { TradePositionCard } from "@/components/ui/trade-position-card";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TradePositionCard } from "@/components/ui/data-display/trade-position-card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/data-display/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/navigation/tabs";
 import { countryFlags } from "@/lib/country-data";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/inputs/button";
 
 // Mock data for demonstration purposes
 const activePositions = [

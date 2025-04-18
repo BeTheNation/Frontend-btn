@@ -4,10 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/inputs/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/data-display/card";
+import { Separator } from "@/components/ui/layout/separator";
+import { Slider } from "@/components/ui/inputs/slider";
 import { useCountryData } from "@/hooks/useCountryData";
 import { useWeb3 } from "@/hooks/useWeb3";
 
@@ -78,7 +78,7 @@ export default function CountryPage() {
                 <span className="text-gray-400 text-sm">Open Trades</span>
               </div>
               <p className="text-white font-medium">{country.openTrades}</p>
-            </div>
+        </div>
 
             <div className="text-center">
               <div className="flex items-center gap-2 mb-1">
@@ -112,7 +112,7 @@ export default function CountryPage() {
               <span className="text-[#1EFA10] font-medium">
                 {country.countryScore}
               </span>
-            </div>
+              </div>
 
             <div className="h-64 w-full">
               {/* Replace with actual chart component */}
@@ -123,7 +123,7 @@ export default function CountryPage() {
                   stroke="#1EFA10"
                   strokeWidth="3"
                 />
-                <path
+                  <path
                   d="M0,200 L20,180 C40,160 60,140 80,150 C100,160 120,170 140,150 C160,130 180,110 200,115 C220,120 240,125 260,100 C280,75 300,50 320,75 C340,100 360,125 380,100 C400,75 420,50 440,30 C460,10 480,0 500,0 L500,200 L0,200"
                   fill="url(#greenGradient)"
                   fillOpacity="0.3"
@@ -208,17 +208,17 @@ export default function CountryPage() {
                 </svg>
                 Short
               </button>
-            </div>
+                </div>
 
             <h3 className="text-white font-medium mb-2">Market</h3>
             <div className="flex justify-between mb-4">
               <span className="text-gray-400">Balance : $9,894</span>
               <button className="text-blue-400 text-sm">Deposit Funds</button>
-            </div>
+                </div>
 
             <div className="bg-[#1A1A1A] rounded-md p-3 flex justify-center mb-4">
               <span className="text-white">nUSDC</span>
-            </div>
+              </div>
 
             <div className="mb-4">
               <Slider
@@ -253,7 +253,7 @@ export default function CountryPage() {
                   <div className="text-gray-400">Size = Entry Price</div>
                   <div className="text-white">$500 at {country.markPrice}</div>
                 </div>
-              </div>
+                </div>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                   <svg
@@ -278,8 +278,8 @@ export default function CountryPage() {
             <button className="w-full py-3 bg-[#1a7cff] text-white rounded-md font-medium shadow-lg hover:bg-blue-500 transition-colors">
               Place Trade
             </button>
+            </div>
           </div>
-        </div>
 
         {/* Bottom Panels */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -301,7 +301,7 @@ export default function CountryPage() {
                     d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
                   />
                 </svg>
-              </button>
+                </button>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed">
               {country.description}
@@ -326,8 +326,8 @@ export default function CountryPage() {
                     d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
                   />
                 </svg>
-              </button>
-            </div>
+                </button>
+              </div>
 
             <p className="text-gray-500 mb-4 border-b border-[#222222] pb-3">
               You are ranked 167th in Indonesia
@@ -367,7 +367,7 @@ export default function CountryPage() {
                         height={24}
                         className="w-full h-full object-cover"
                       />
-                    </div>
+                </div>
                     <span className="text-white text-sm">0xClara</span>
                   </div>
                   <span className="text-[#1EFA10]">$12,000</span>
@@ -392,7 +392,7 @@ export default function CountryPage() {
                   </div>
                   <span className="text-[#1EFA10]">$10,000</span>
                 </div>
-              </div>
+                </div>
 
               {/* User 167 */}
               <div className="pt-3">
@@ -416,7 +416,7 @@ export default function CountryPage() {
                 </div>
               </div>
             </div>
-          </div>
+                </div>
 
           {/* Positions Panel */}
           <div className="bg-[#111111] rounded-xl p-4">
@@ -425,19 +425,19 @@ export default function CountryPage() {
               <button className="text-gray-500">
                 <svg
                   className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
                     strokeWidth={2}
                     d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </button>
-            </div>
+                            />
+                          </svg>
+                        </button>
+                      </div>
 
             <div className="h-full flex items-center justify-center min-h-[200px]">
               <p className="text-gray-500">No active positions</p>

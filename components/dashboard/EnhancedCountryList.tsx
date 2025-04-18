@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/inputs/input";
+import { Button } from "@/components/ui/inputs/button";
 import { useCountries } from "@/hooks/useCountries";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/data-display/card";
 import { useWeb3 } from "@/hooks/useWeb3";
 import { SearchIcon } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";

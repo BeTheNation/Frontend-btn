@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/inputs/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/inputs/select";
 import Link from "next/link";
 import { useTradeHistory } from "@/hooks/useTradeHistory";
 import { formatCurrency } from "@/lib/utils";

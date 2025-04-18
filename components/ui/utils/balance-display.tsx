@@ -3,7 +3,7 @@
 import { useWeb3 } from "@/hooks/useWeb3";
 import { useDemoMode } from "@/hooks/useDemoMode";
 import { formatCurrency } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/utils/use-toast";
 import { Button } from "./button";
 import { useEffect } from "react";
 

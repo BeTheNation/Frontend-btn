@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/inputs/button"
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Slider } from "@/components/ui/slider"
+} from "@/components/ui/feedback/dialog"
+import { Input } from "@/components/ui/inputs/input"
+import { Slider } from "@/components/ui/inputs/slider"
 import { ChevronUp, ChevronDown, HelpCircle, ArrowRight, Info } from "lucide-react"
 import { usePositionStore } from "@/store/positionStore"
 

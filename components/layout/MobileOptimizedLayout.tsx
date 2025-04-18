@@ -2,8 +2,8 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/inputs/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/layout/sheet";
 import {
   Menu,
   X,
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ConnectWalletButton } from "@/components/ui/connect-wallet-button";
+import { ConnectWalletButton } from "@/components/ui/utils/connect-wallet-button";
 import { useWeb3 } from "@/hooks/useWeb3";
 
 export default function MobileOptimizedLayout({

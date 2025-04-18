@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/inputs/button";
+import { Input } from "@/components/ui/inputs/input";
+import { Label } from "@/components/ui/inputs/label";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/feedback/dialog";
 import { useContract } from "@/hooks/useContract";
 import { useDemoMode } from "@/hooks/useDemoMode";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/utils/use-toast";
 
 interface TPSLFormProps {
   position: any;

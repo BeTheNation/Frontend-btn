@@ -6,9 +6,9 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/data-display/tooltip";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/data-display/card";
+import { Badge } from "@/components/ui/data-display/badge";
 
 interface CountryStat {
   label: string;

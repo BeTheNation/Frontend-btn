@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/inputs/button";
 import {
   Dialog,
   DialogContent,
@@ -9,14 +9,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+  DialogTrigger,
+} from "@/components/ui/feedback/dialog";
 import { useContract } from "@/hooks/useContract";
 import { useDemoMode } from "@/hooks/useDemoMode";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/utils/use-toast";
 
 interface ClosePositionButtonProps {
   position: any;
-  onClose: () => void;
+  onClose: () => Promise<any>;
 }
 
 export default function ClosePositionButton({
@@ -46,7 +47,7 @@ export default function ClosePositionButton({
       const result = await onClose();
 
       // Check if we got an error object back
-      if (result && result.error) {
+      if (result && typeof result === 'object' && 'error' in result) {
         console.log("Received error result in ClosePositionButton:", result);
         // Error has already been handled by the contract service with toasts
         setIsConfirmOpen(false);
@@ -54,7 +55,7 @@ export default function ClosePositionButton({
       }
 
       // Check if position was already closed
-      if (result && result.alreadyClosed) {
+      if (result && typeof result === 'object' && 'alreadyClosed' in result) {
         console.log("Position was already closed:", result);
         // This has already been handled properly
         setIsConfirmOpen(false);

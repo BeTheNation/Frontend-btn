@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import LeverageSelector from "./LeverageSelector";
-import ModalConfirmTrade from "./ModalConfirmTrade";
+import { Button } from "@/components/ui/inputs/button";
+import { Input } from "@/components/ui/inputs/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/data-display/card";
+import { Separator } from "@/components/ui/layout/separator";
+import LeverageSelector from "@/components/trading/LeverageSelector";
+import ModalConfirmTrade from "@/components/trading/ModalConfirmTrade";
 import { usePositionStore } from "@/store/positionStore";
 import { useContract } from "@/hooks/useContract";
 import { formatEther } from "viem";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/utils/use-toast";
 import type { Country } from "@/hooks/useCountries";
 import { useDemoMode } from "@/hooks/useDemoMode";
 import { useFundingRate } from "@/hooks/useFundingRate";

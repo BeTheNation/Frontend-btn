@@ -11,8 +11,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/navigation/tabs";
+import { Card, CardContent } from "@/components/ui/data-display/card";
 
 interface ChartDataPoint {
   date: string;

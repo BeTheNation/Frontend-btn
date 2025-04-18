@@ -8,7 +8,7 @@ import {
   validateOpenPositionParams,
   validateContractAddress,
 } from "@/lib/contracts/PredictionMarket";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/utils/use-toast";
 import { parseEther } from "viem";
 import {
   handleError,

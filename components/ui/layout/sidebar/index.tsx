@@ -2,20 +2,19 @@
 
 import { Sidebar } from "./base";
 import { SidebarProvider, useSidebar, SidebarContext } from "./context";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/inputs/button";
+import { Input } from "@/components/ui/inputs/input";
 import { Slot } from "@radix-ui/react-slot";
 import { PanelLeft } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { VariantProps, cva } from "class-variance-authority";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Bell, ChevronLeft, ChevronRight, Settings, User } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 // Sidebar Rail (toggle button)
 const SidebarRail = React.forwardRef<

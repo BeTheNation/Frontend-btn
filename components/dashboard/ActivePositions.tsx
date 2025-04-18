@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/inputs/button";
 import { usePositions } from "@/hooks/usePositions";
 import { formatCurrency } from "@/lib/utils";
 import ClosePositionButton from "@/components/trading/ClosePositionButton";
@@ -8,10 +8,12 @@ import UnrealizedPnL from "@/components/trading/UnrealizedPnL";
 import RealTimeMarkPrice from "@/components/trading/RealTimeMarkPrice";
 import TPSLForm from "@/components/trading/TPSLForm";
 import { useDemoMode } from "@/hooks/useDemoMode";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/utils/use-toast";
 import { usePositionStore } from "@/store/positionStore";
 import { useContract } from "@/hooks/useContract";
 import { useFundingRate } from "@/hooks/useFundingRate";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function ActivePositions() {
   const { positions, isLoading, closePosition } = usePositions();
@@ -125,7 +127,7 @@ export default function ActivePositions() {
           console.error("Error closing demo position:", error);
           toast({
             title: "Error",
-            description: `Failed to close demo position: ${error.message}`,
+            description: `Failed to close demo position: ${error instanceof Error ? error.message : String(error)}`,
             variant: "destructive",
           });
           throw error; // Rethrow to be caught by the outer try/catch

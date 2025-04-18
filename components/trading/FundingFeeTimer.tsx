@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/components/ui/data-display/tooltip";
 import { Info } from "lucide-react";
 
 interface FundingFeeTimerProps {

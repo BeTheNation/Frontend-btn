@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/inputs/slider";
+import { Button } from "@/components/ui/inputs/button";
 
 interface LeverageSelectorProps {
   value: number;
