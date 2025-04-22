@@ -15,6 +15,9 @@ import type { Country } from "@/hooks/useCountries";
 import { useDemoMode } from "@/hooks/useDemoMode";
 import { useFundingRate } from "@/hooks/useFundingRate";
 import { useAccount, useNetwork, useBalance } from "wagmi";
+import { USDCApproval } from "@/components/ui/usdc-approval";
+import { handleContractFunctionExecutionError } from "@/lib/viem-error-decoder";
+import { getContractAddress } from "@/lib/contracts/PredictionMarket";
 
 interface PredictionFormProps {
   country: Country;
@@ -26,8 +29,16 @@ export default function PredictionForm({ country }: PredictionFormProps) {
   const [leverage, setLeverage] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
+  const [needsUSDCApproval, setNeedsUSDCApproval] = useState(false);
+  const [tradeError, setTradeError] = useState<string | null>(null);
 
-  const { handleOpenPosition } = useContract();
+  const {
+    openPosition,
+    closePosition,
+    error: contractError,
+    isLoading: isContractLoading,
+    clearError,
+  } = useContract();
   const { toast } = useToast();
   const { address, isConnected } = useAccount();
   const { chain } = useNetwork();
@@ -46,6 +57,8 @@ export default function PredictionForm({ country }: PredictionFormProps) {
 
   const addPosition = usePositionStore((state) => state.addPosition);
   const { fundingRate } = useFundingRate(country.id);
+
+  const contractAddress = chain ? getContractAddress(chain.id) : undefined;
 
   // Fix the demo mode toggle to allow enabling/disabling properly
   const handleToggleDemoMode = () => {
@@ -75,200 +88,195 @@ export default function PredictionForm({ country }: PredictionFormProps) {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!isDemoMode && !isConnected) {
-      toast({
-        title: "Error",
-        description: "Please connect your wallet or enable Demo Mode",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    if (!isDemoMode && !chain) {
-      toast({
-        title: "Error",
-        description: "No network selected",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Show confirm modal instead of direct submission
+    setShowConfirmModal(true);
+    return;
+  };
 
-    if (!amount || Number(amount) <= 0) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid amount",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleConfirmTrade = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setShowConfirmModal(false);
 
     try {
-      setIsSubmitting(true);
-      setShowConfirmModal(true);
+      // Clear any previous errors
+      setTradeError(null);
+      clearError?.();
+
+      // Convert to string with correct decimal places
+      const marginAmount = amount.toString();
+
+      // Check if we're in demo mode
+      if (isDemoMode) {
+        // Demo mode logic for opening position
+        console.log("Opening demo position with params:", {
+          countryId: country.id,
+          direction,
+          leverage,
+          marginAmount,
+        });
+
+        // Simulated position opening for demo mode
+        const positionResult = await openPosition(
+          country.id,
+          direction,
+          leverage,
+          marginAmount
+        );
+
+        if (positionResult.success) {
+          toast({
+            title: "Position Opened (Demo)",
+            description: `You opened a ${direction} position on ${country.name} with ${leverage}x leverage`,
+            variant: "default",
+          });
+
+          // Reset form after successful submission
+          setDirection("long");
+          setAmount("");
+          setLeverage(1);
+        } else {
+          setTradeError(positionResult.error || "Failed to open demo position");
+          toast({
+            title: "Error Opening Position",
+            description: positionResult.error || "Failed to open demo position",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Add this debug logging
+        console.log("Starting contract call with params:", {
+          countryId: country.id,
+          direction,
+          leverage,
+          marginAmount,
+        });
+
+        // Check if approval is needed first
+        if (needsUSDCApproval) {
+          setTradeError("Please approve USDC spending first");
+          toast({
+            title: "Approval Required",
+            description:
+              "You need to approve USDC spending before making this trade",
+            variant: "warning",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Open position via the contract with improved error handling
+        const result = await openPosition(
+          country.id,
+          direction,
+          leverage,
+          marginAmount
+        );
+
+        // Add this debug logging
+        console.log("OpenPosition result:", result);
+
+        // Handle errors with improved handling
+        if (!result.success) {
+          console.error("Failed to open position:", result.error, result.code);
+          setTradeError(result.error || "Failed to open position");
+
+          // Enhanced check for approval errors - look for various error signatures and codes
+          if (
+            (result.code &&
+              (result.code === "INSUFFICIENT_ALLOWANCE" ||
+                result.code === "APPROVAL_REQUIRED")) ||
+            (result.error &&
+              (result.error.includes("allowance") ||
+                result.error.includes("ERC20InsufficientAllowance") ||
+                result.error.includes("0xfb8f41b2")))
+          ) {
+            // Set the flag to show approval component
+            setNeedsUSDCApproval(true);
+            setTradeError(
+              "You need to approve USDC spending before making this trade"
+            );
+            toast({
+              title: "USDC Approval Required",
+              description:
+                "Please approve USDC spending to continue with your trade",
+              variant: "warning",
+            });
+          } else {
+            toast({
+              title: "Error Opening Position",
+              description: result.error || "Failed to open position",
+              variant: "destructive",
+            });
+          }
+
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Success case - show position confirmation
+        toast({
+          title: "Position Opened Successfully",
+          description: `You opened a ${direction} position on ${country.name} with ${leverage}x leverage`,
+          variant: "default",
+        });
+
+        // Reset form after successful submission
+        setDirection("long");
+        setAmount("");
+        setLeverage(1);
+      }
     } catch (error: any) {
-      console.error("Submit error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit transaction",
-        variant: "destructive",
+      console.error("Error opening position:", error);
+      console.error("Error details:", {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        details: error.details || null,
       });
+
+      // Format the error message for display
+      let errorMessage = error.message || "Transaction failed";
+
+      // Enhanced detection for approval errors
+      if (
+        errorMessage.includes("allowance") ||
+        errorMessage.includes("ERC20InsufficientAllowance") ||
+        errorMessage.includes("0xfb8f41b2") ||
+        error.code === "INSUFFICIENT_ALLOWANCE" ||
+        (error.details && error.details.includes("ERC20InsufficientAllowance"))
+      ) {
+        setNeedsUSDCApproval(true);
+        errorMessage =
+          "You need to approve USDC spending before making this trade";
+        toast({
+          title: "USDC Approval Required",
+          description: "Please approve USDC spending first",
+          variant: "warning",
+        });
+      } else {
+        toast({
+          title: "Error Opening Position",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+
+      setTradeError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleConfirmTrade = async () => {
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
-    try {
-      let txHash = "";
-
-      // Validate amount
-      if (!amount || parseFloat(amount) <= 0) {
-        throw new Error("Please enter a valid amount greater than 0");
-      }
-
-      // Ensure leverage is a valid integer
-      if (!Number.isInteger(leverage) || leverage < 1 || leverage > 5) {
-        throw new Error(
-          `Leverage must be an integer between 1 and 5, got ${leverage}`
-        );
-      }
-
-      // Validate if enough balance in demo mode
-      if (isDemoMode && Number(amount) * leverage > demoBalance) {
-        throw new Error(
-          `Insufficient demo balance. Available: ${demoBalance.toFixed(
-            2
-          )} DEMO, Required: ${(Number(amount) * leverage).toFixed(2)} DEMO`
-        );
-      }
-
-      // Calculate the position size (margin * leverage)
-      const positionSize = Number(amount) * leverage;
-
-      if (!isDemoMode) {
-        // Ensure country.id is passed as a string
-        const countryIdString = String(country.id);
-
-        // Ensure leverage is an integer
-        const leverageInt = Math.round(leverage);
-
-        console.log("Opening position with parameters:", {
-          countryId: countryIdString,
-          direction,
-          leverage: leverageInt,
-          amount,
-          chainId: chain?.id,
-          chainName: chain?.name,
-        });
-
-        try {
-          const tx = await handleOpenPosition(
-            countryIdString,
-            direction,
-            leverageInt, // Use integer value
-            amount
-          );
-
-          // Check if we got a transaction or an error object
-          if (tx && tx.error) {
-            console.error("Transaction failed:", tx);
-            throw new Error(tx.message || "Transaction failed");
-          }
-
-          if (tx && tx.hash) {
-            txHash = tx.hash;
-            console.log("Transaction sent successfully:", txHash);
-
-            // Even in testnet mode, we should update the UI immediately
-            // This will be synced with the actual blockchain state later,
-            // but it provides immediate feedback to the user
-            // For testnet mode, temporarily modify UI display only
-            if (!isDemoMode && balance) {
-              // Calculate the new balance after deducting margin
-              const currentBalance = parseFloat(balance.formatted);
-              const marginAmount = parseFloat(amount);
-              const newUIBalance = Math.max(0, currentBalance - marginAmount);
-
-              // Store this in sessionStorage for temporary UI update
-              sessionStorage.setItem("pendingBalanceUpdate", `${newUIBalance}`);
-
-              // Also store the margin amount for potential refunds if transaction fails
-              sessionStorage.setItem("lastMarginAmount", `${marginAmount}`);
-
-              console.log("Opening position - Updated UI balance:", {
-                originalBalance: currentBalance,
-                marginDeducted: marginAmount,
-                newBalance: newUIBalance,
-              });
-            }
-          } else {
-            console.error("No transaction hash returned:", tx);
-            throw new Error("No transaction hash returned");
-          }
-        } catch (txError) {
-          console.error("Transaction error:", txError);
-          throw txError;
-        }
-      }
-
-      // Create position object with unique ID based on timestamp
-      const timestamp = Date.now();
-      const newPosition = {
-        id: isDemoMode ? `demo-${timestamp}` : `tx-${timestamp}`,
-        country: country,
-        direction: direction,
-        size: Number.parseFloat(amount),
-        leverage: leverage,
-        entryPrice: country.markPrice,
-        markPrice: country.markPrice,
-        openTime: new Date(),
-        fundingRate: fundingRate,
-        nextFundingTime: new Date(Date.now() + 8 * 60 * 60 * 1000),
-        txHash: txHash,
-      };
-
-      // Add position to store
-      if (isDemoMode) {
-        addDemoPosition(newPosition);
-      } else {
-        addPosition(newPosition);
-      }
-
-      setShowConfirmModal(false);
-      setAmount("");
-      setLeverage(1);
-
-      toast({
-        title: isDemoMode ? "Demo Trade Opened" : "Position Opened",
-        description: `Your position has been opened successfully.${
-          isDemoMode
-            ? ` Demo balance: ${(
-                demoBalance -
-                Number(amount) * leverage
-              ).toFixed(2)} DEMO`
-            : " Transaction has been sent to the blockchain."
-        }`,
-      });
-
-      // Navigate to positions page but with a small delay to ensure stores are updated
-      setTimeout(() => {
-        window.location.href = "/dashboard?tab=positions";
-      }, 1000);
-    } catch (error: any) {
-      console.error("Trade error:", error);
-      setShowConfirmModal(false);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to open position",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleApprovalSuccess = () => {
+    setNeedsUSDCApproval(false);
+    toast({
+      title: "USDC Approved",
+      description: "You can now proceed with opening your position",
+    });
   };
 
   return (
@@ -430,6 +438,14 @@ export default function PredictionForm({ country }: PredictionFormProps) {
             </div>
           </div>
 
+          {!isDemoMode && (
+            <USDCApproval
+              amount={amount}
+              onSuccess={handleApprovalSuccess}
+              contractAddress={contractAddress}
+            />
+          )}
+
           <Button
             className="w-full"
             size="lg"
@@ -438,14 +454,17 @@ export default function PredictionForm({ country }: PredictionFormProps) {
               !direction ||
               !amount ||
               Number.parseFloat(amount) <= 0 ||
-              isSubmitting
+              isSubmitting ||
+              needsUSDCApproval
             }
-            onClick={handleSubmit}
+            onClick={() => setShowConfirmModal(true)}
           >
             {!isConnected
               ? "Connect Wallet"
               : isSubmitting
               ? "Confirming..."
+              : needsUSDCApproval
+              ? "Approve USDC First"
               : `Place ${direction === "long" ? "Long" : "Short"} Order`}
           </Button>
         </CardContent>

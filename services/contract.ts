@@ -7,6 +7,8 @@ import {
   formatTPSL,
   validateOpenPositionParams,
   validateContractAddress,
+  getUSDCAddress,
+  approveUSDC,
 } from "@/lib/contracts/PredictionMarket";
 import { toast } from "@/components/ui/use-toast";
 import { parseEther } from "viem";
@@ -70,7 +72,18 @@ export class ContractService {
     return true;
   }
 
-  // Open a position with standard error handling
+  /**
+   * Open a new position
+   *
+   * @param openPosition Contract write function for opening position
+   * @param chain Current chain information
+   * @param countryId Country ID to trade
+   * @param direction Position direction (long/short)
+   * @param leverage Position leverage (1-5)
+   * @param marginAmount Amount to use as margin, in string format
+   * @param isDemoMode Whether we're in demo mode
+   * @returns Result object with transaction data or error
+   */
   static async openPosition(
     openPosition: any, // contract write function
     chain: any,
@@ -81,457 +94,254 @@ export class ContractService {
     isDemoMode: boolean
   ) {
     try {
-      // Ensure leverage is an integer
-      if (!Number.isInteger(leverage)) {
-        console.warn(
-          `Non-integer leverage value (${leverage}) provided. Rounding to ${Math.round(
-            leverage
-          )}.`
-        );
-        leverage = Math.round(leverage);
-      }
-
-      // Verbose diagnostic logging - inspect all parameters and their types
-      console.log("Opening Position Diagnostic Info:", {
-        countryId: `${countryId} (${typeof countryId})`,
-        direction: `${direction === "long"} (${typeof (direction === "long")})`,
-        leverage: `${leverage} (${typeof leverage}, isInteger: ${Number.isInteger(
-          leverage
-        )})`,
-        marginAmount: `${marginAmount} (${typeof marginAmount})`,
-        isDemoMode: `${isDemoMode} (${typeof isDemoMode})`,
-        chain: chain ? `${chain.name} (ID: ${chain.id})` : "undefined",
-        timestamp: new Date().toISOString(),
-      });
-
-      // Check if connected to right network
-      const isValidNetwork = this.validateNetwork(chain);
-
-      // Make sure countryId is a string (not a number or other type)
-      if (typeof countryId !== "string") {
-        console.warn(
-          `countryId must be a string, got ${typeof countryId}. Converting...`
-        );
-        countryId = String(countryId);
-      }
-
-      // Format parameters
-      const value = formatMarginAmount(marginAmount);
-
-      // Log value details to debug conversion issues
-      console.log("Value after formatting:", {
-        originalAmount: marginAmount,
-        formattedValueBigInt: value,
-        formattedValueString: value.toString(),
-        hexValue: "0x" + value.toString(16),
-      });
-
-      const args = [countryId, direction === "long", leverage] as const;
-
-      // Validate parameters
-      const error = validateOpenPositionParams(
+      console.log("Opening position:", {
         countryId,
-        direction === "long",
+        direction,
         leverage,
-        value
-      );
-
-      if (error) {
-        throw handleValidationError(error);
-      }
-
-      // Handle demo mode or real transaction
-      let tx;
-
-      // Skip the actual transaction in demo mode
-      if (isDemoMode || !isValidNetwork) {
-        console.log("Using demo mode for position opening");
-        tx = { hash: "demo-tx-" + Date.now() };
-
-        toast({
-          title: "Demo Mode",
-          description:
-            "Transaction simulated in demo mode. Connect to Sepolia and disable demo mode for real transactions.",
-        });
-
-        return tx;
-      }
-
-      try {
-        // Make sure value is provided correctly for payable function
-        if (value <= BigInt(0)) {
-          throw new Error("Margin amount must be greater than 0");
-        }
-
-        console.log("Attempting to send transaction with params:", {
-          args,
-          value,
-          valueAsString: value.toString(),
-          marginAmount,
-        });
-
-        // Check if openPosition is available
-        if (!openPosition || typeof openPosition !== "function") {
-          console.error(
-            "openPosition function is not available:",
-            openPosition
-          );
-          throw new Error(
-            "Contract write function is not properly initialized"
-          );
-        }
-
-        // Attempt to simulate the transaction first to catch errors early
-        if (typeof openPosition.simulate === "function") {
-          try {
-            console.log("Simulating contract transaction before sending...");
-            await openPosition.simulate({
-              args,
-              value,
-            });
-            console.log("Simulation successful, proceeding with transaction");
-          } catch (simError) {
-            console.error("Simulation failed:", simError);
-
-            // Use the detailed error analysis
-            if (
-              simError.message &&
-              simError.message.includes("ContractFunctionExecutionError")
-            ) {
-              const errorAnalysis =
-                debugContractFunctionExecutionError(simError);
-              console.error("Contract execution error details:", errorAnalysis);
-
-              if (errorAnalysis.reason) {
-                return {
-                  error: true,
-                  message: `Contract simulation failed: ${errorAnalysis.reason}`,
-                  details: errorAnalysis,
-                };
-              }
-            }
-
-            return {
-              error: true,
-              message: simError.message || "Contract simulation failed",
-              details: simError,
-            };
-          }
-        }
-
-        // Send the transaction
-        try {
-          tx = await openPosition({
-            args,
-            value,
-          });
-          console.log("Transaction submitted successfully:", tx);
-
-          toast({
-            title: "Transaction Sent",
-            description:
-              "Your position is being opened. Please wait for it to be confirmed.",
-          });
-
-          return tx;
-        } catch (contractError) {
-          // Use the detailed error analysis
-          console.error("Contract execution error:", contractError);
-
-          if (
-            contractError.message &&
-            contractError.message.includes("ContractFunctionExecutionError")
-          ) {
-            const errorAnalysis =
-              debugContractFunctionExecutionError(contractError);
-            console.error("Detailed error analysis:", errorAnalysis);
-
-            if (errorAnalysis.reason) {
-              toast({
-                title: "Transaction Failed",
-                description: `Contract error: ${errorAnalysis.reason}`,
-                variant: "destructive",
-              });
-
-              return {
-                error: true,
-                message: `Contract error: ${errorAnalysis.reason}`,
-                details: errorAnalysis,
-              };
-            }
-          }
-
-          // Handle other contract errors
-          toast({
-            title: "Transaction Failed",
-            description:
-              contractError.message || "Failed to execute transaction",
-            variant: "destructive",
-          });
-
-          return {
-            error: true,
-            message: contractError.message || "Unknown contract error",
-            details: contractError,
-          };
-        }
-      } catch (error: any) {
-        console.error("Transaction error details:", {
-          name: error.name,
-          message: error.message,
-          code: error.code,
-          reason: error.reason,
-          data: error.data,
-        });
-
-        if (error.message && error.message.includes("reverted")) {
-          const reasonMatch = error.message.match(/reverted: ([^"]+)/);
-          if (reasonMatch && reasonMatch[1]) {
-            throw new Error(`Contract Error: ${reasonMatch[1]}`);
-          }
-        }
-
-        throw error;
-      }
-    } catch (error: any) {
-      // Use standardized error handling
-      handleError(error, "Failed to open position");
-      throw error;
-    }
-  }
-
-  // Close a position with standard error handling
-  static async closePosition(
-    closePosition: any, // contract write function
-    positionId: bigint,
-    isDemoMode: boolean
-  ) {
-    try {
-      // Handle demo mode
-      if (isDemoMode) {
-        console.log(
-          "Demo mode active: simulating position close for",
-          positionId.toString()
-        );
-
-        toast({
-          title: "Position Closed (Demo)",
-          description: "Your demo position has been closed successfully.",
-        });
-
-        return { hash: "demo-tx-close-" + Date.now() };
-      }
-
-      // Add global error handling for all close operations
-      if (!closePosition) {
-        console.warn("No closePosition function available");
-        toast({
-          title: "Operation unavailable",
-          description:
-            "The close position function is not currently available. Try again later.",
-        });
-        return {
-          error: true,
-          message: "Close position function unavailable",
-          positionId: positionId.toString(),
-        };
-      }
-
-      // Execute real transaction
-      let tx;
-      try {
-        console.log(
-          "Attempting to close position with ID:",
-          positionId.toString()
-        );
-
-        // Modify the wagmi/viem contract call to catch errors early
-        // Use a custom implementation that doesn't throw errors
-        if (typeof closePosition.simulate === "function") {
-          try {
-            await closePosition.simulate({
-              args: [positionId],
-            });
-          } catch (simError) {
-            // If simulation failed, check if position already closed
-            if (
-              simError.message &&
-              simError.message.includes("Position already closed")
-            ) {
-              console.log("Position already closed - caught in simulation");
-              toast({
-                title: "Position Already Closed",
-                description:
-                  "This position has already been closed. Updating your positions...",
-              });
-              return { alreadyClosed: true, positionId: positionId.toString() };
-            }
-
-            // For other simulation errors, return error object instead of throwing
-            console.error("Simulation failed:", simError);
-            toast({
-              title: "Transaction Simulation Failed",
-              description: simError.message || "Could not simulate transaction",
-              variant: "destructive",
-            });
-            return {
-              error: true,
-              message: simError.message,
-              positionId: positionId.toString(),
-            };
-          }
-        }
-
-        // CRITICAL: Wrap in try/catch to prevent errors from propagating
-        try {
-          tx = await closePosition({
-            args: [positionId],
-          });
-          console.log("Close position transaction submitted successfully:", tx);
-        } catch (contractError) {
-          // Handle contract errors without throwing
-          console.error("Contract interaction error:", contractError);
-
-          // Check if position already closed
-          if (
-            contractError.message &&
-            contractError.message.includes("Position already closed")
-          ) {
-            toast({
-              title: "Position Already Closed",
-              description:
-                "This position has already been closed. Updating your positions...",
-            });
-            return { alreadyClosed: true, positionId: positionId.toString() };
-          }
-
-          // Handle other contract errors
-          toast({
-            title: "Transaction Failed",
-            description:
-              contractError.message || "Failed to execute transaction",
-            variant: "destructive",
-          });
-          return {
-            error: true,
-            message: contractError.message,
-            positionId: positionId.toString(),
-          };
-        }
-      } catch (error) {
-        // Final catch for any other errors
-        console.error("Error in closePosition:", error);
-
-        // Check if position already closed
-        if (
-          error.message &&
-          error.message.includes("Position already closed")
-        ) {
-          console.log("Position was already closed, updating UI state");
-          toast({
-            title: "Position Already Closed",
-            description:
-              "This position has already been closed. Refreshing your positions...",
-          });
-
-          // Return a special object to indicate position was already closed
-          return { alreadyClosed: true, positionId: positionId.toString() };
-        }
-
-        // Return error object instead of throwing
-        return {
-          error: true,
-          message: error.message || "Unknown error",
-          positionId: positionId.toString(),
-        };
-      }
-
-      // Transaction successful
-      toast({
-        title: "Position Closed",
-        description: "Your position has been closed successfully.",
+        marginAmount,
+        isDemoMode,
       });
 
-      return tx;
-    } catch (error) {
-      // This should never be reached, but just in case
-      console.error("Unexpected error in closePosition:", error);
+      // If in demo mode, simulate successful transaction
+      if (isDemoMode) {
+        console.log("Demo mode: Simulating position open");
+        return {
+          success: true,
+          hash: `demo-tx-open-${Date.now()}`,
+          countryId,
+          direction,
+          leverage,
+          marginAmount,
+        };
+      }
+
+      // Validate network
+      if (!this.validateNetwork(chain)) {
+        return {
+          error: true,
+          message: "Unsupported network. Please switch to Sepolia Testnet.",
+        };
+      }
+
+      // Make sure country ID is valid
+      if (!countryId || countryId.trim() === "") {
+        return {
+          error: true,
+          message: "Invalid country ID",
+        };
+      }
+
+      // Convert direction to numeric enum value
+      const directionValue = direction === "long" ? 0 : 1;
+
+      // Parse the margin amount to wei
+      const size = parseEther(marginAmount);
+
+      // First, approve USDC spending (if we're not in a mock environment)
+      try {
+        // If we're in a browser environment, the user will need to approve USDC first
+        // This would typically be handled through a separate UI action
+        console.log(
+          "⚠️ IMPORTANT: Make sure to approve USDC spending before opening a position"
+        );
+        console.log(
+          `Use the PredictionMarket UI to approve at least ${marginAmount} USDC for the contract`
+        );
+        console.log(`Contract address: ${getContractAddress(chain.id)}`);
+        console.log(`USDC address: ${getUSDCAddress(chain.id)}`);
+      } catch (error) {
+        console.warn("Could not notify about USDC approval:", error);
+      }
+
+      // Execute contract call
+      const tx = await openPosition({
+        args: [countryId, directionValue, leverage, size],
+        value: 0n, // Include zero value for payable function
+      });
+
+      console.log("Position opened tx:", tx?.hash);
+      return {
+        success: true,
+        hash: tx?.hash,
+        countryId,
+        direction,
+        leverage,
+        marginAmount,
+      };
+    } catch (error: any) {
+      console.error("Error opening position:", error);
+
+      // Special handling for ERC20InsufficientAllowance error
+      if (
+        error.message &&
+        (error.message.includes("0xfb8f41b2") ||
+          error.message.includes("allowance") ||
+          error.message.includes("ERC20InsufficientAllowance") ||
+          error.code === "INSUFFICIENT_ALLOWANCE")
+      ) {
+        console.warn(
+          "Detected ERC20InsufficientAllowance error - user needs to approve USDC"
+        );
+
+        // Return a structured error object with a specific code
+        return {
+          error: true,
+          code: "INSUFFICIENT_ALLOWANCE",
+          message:
+            "You need to approve USDC spending before opening a position",
+          details: {
+            name: error.name,
+            errorSignature: "0xfb8f41b2",
+            errorType: "ERC20InsufficientAllowance",
+          },
+        };
+      }
+
+      // Format the error for UI display
+      const errorResponse = handleError(error, "Failed to open position");
+
       return {
         error: true,
-        message: "Unexpected error in closePosition",
-        positionId: positionId.toString(),
+        message: errorResponse.message,
+        code: errorResponse.code,
+        details: errorResponse.details,
       };
     }
   }
 
-  // Set TP/SL with standard error handling
+  /**
+   * Close an open position
+   *
+   * @param closePosition Contract write function for closing position
+   * @param sender The address of the trader who owns the position
+   * @param isDemoMode Whether we're in demo mode
+   * @returns Result object with transaction data or error
+   */
+  static async closePosition(
+    closePosition: any, // contract write function
+    sender: string,
+    isDemoMode: boolean
+  ) {
+    try {
+      console.log(
+        `Closing position for sender ${sender}, isDemoMode=${isDemoMode}`
+      );
+
+      // If in demo mode, simulate successful transaction
+      if (isDemoMode) {
+        console.log("Demo mode: Simulating position close");
+        return {
+          success: true,
+          hash: `demo-tx-close-${Date.now()}`,
+          sender,
+        };
+      }
+
+      // Validate parameters
+      if (!sender || sender === "0x0000000000000000000000000000000000000000") {
+        return {
+          error: true,
+          message: "Valid sender address is required",
+        };
+      }
+
+      // Execute contract call
+      const tx = await closePosition({
+        args: [sender],
+      });
+
+      console.log("Position close tx:", tx?.hash);
+      return {
+        success: true,
+        hash: tx?.hash,
+        sender,
+      };
+    } catch (error: any) {
+      console.error("Error closing position:", error);
+
+      // Format the error for UI display
+      const errorResponse = handleError(error, "Failed to close position");
+
+      return {
+        error: true,
+        message: errorResponse.message,
+        code: errorResponse.code,
+        details: errorResponse.details,
+      };
+    }
+  }
+
+  /**
+   * Set Take Profit and Stop Loss for a position
+   *
+   * @param setTPSL Contract write function for setting TP/SL
+   * @param chain Current chain information
+   * @param takeProfit Take profit price level
+   * @param stopLoss Stop loss price level
+   * @param isDemoMode Whether we're in demo mode
+   * @returns Result object with transaction data or error
+   */
   static async setTPSL(
     setTPSL: any, // contract write function
     chain: any,
-    positionId: bigint,
     takeProfit: number,
     stopLoss: number,
     isDemoMode: boolean
   ) {
     try {
-      // Format TP/SL values
-      const { takeProfit: tp, stopLoss: sl } = formatTPSL(takeProfit, stopLoss);
-
-      // Log action
-      console.log("Setting TP/SL:", {
-        positionId: positionId.toString(),
+      console.log(`Setting TP/SL:`, {
         takeProfit,
         stopLoss,
-        demoMode: isDemoMode,
+        isDemoMode,
       });
 
-      let tx;
-
-      // Use demo mode if enabled or not on Sepolia
-      if (isDemoMode || chain?.id !== 11155111) {
-        console.log("Demo mode active: simulating setTPSL");
-
-        // Simulate a transaction
-        tx = { hash: "demo-tx-tpsl-" + Date.now() };
-
-        toast({
-          title: "TP/SL Set (Demo)",
-          description: "Take profit and stop loss have been set in demo mode.",
-        });
-      } else {
-        // Execute actual transaction
-        try {
-          console.log("Attempting to set TP/SL with params:", {
-            positionId: positionId.toString(),
-            takeProfit: tp.toString(),
-            stopLoss: sl.toString(),
-          });
-          tx = await setTPSL({
-            args: [positionId, tp, sl],
-          });
-          console.log("Set TP/SL transaction submitted successfully:", tx);
-        } catch (error: any) {
-          console.error("Set TP/SL transaction error details:", {
-            name: error.name,
-            message: error.message,
-            code: error.code,
-            reason: error.reason,
-            data: error.data,
-          });
-          throw error;
-        }
-
-        toast({
-          title: "TP/SL Set",
-          description: "Take profit and stop loss have been set successfully.",
-        });
+      // If in demo mode, simulate successful transaction
+      if (isDemoMode) {
+        console.log("Demo mode: Simulating TP/SL update");
+        return {
+          success: true,
+          hash: `demo-tx-tpsl-${Date.now()}`,
+          takeProfit,
+          stopLoss,
+        };
       }
 
-      return tx;
+      // Validate chain
+      if (!this.validateNetwork(chain)) {
+        return {
+          error: true,
+          message: "Unsupported network. Please switch to Sepolia Testnet.",
+        };
+      }
+
+      // Convert takeProfit and stopLoss to BigInt values
+      const takeProfitBigInt = BigInt(takeProfit);
+      const stopLossBigInt = BigInt(stopLoss);
+
+      // Execute contract call
+      const tx = await setTPSL({
+        args: [takeProfitBigInt, stopLossBigInt],
+      });
+
+      console.log("Set TP/SL tx:", tx?.hash);
+      return {
+        success: true,
+        hash: tx?.hash,
+        takeProfit,
+        stopLoss,
+      };
     } catch (error: any) {
-      // Use standardized error handling
-      handleError(error, "Failed to set take profit and stop loss");
-      throw error;
+      console.error("Error setting TP/SL:", error);
+
+      // Format the error for UI display
+      const errorResponse = handleError(error, "Failed to set TP/SL");
+
+      return {
+        error: true,
+        message: errorResponse.message,
+        code: errorResponse.code,
+        details: errorResponse.details,
+      };
     }
   }
 }

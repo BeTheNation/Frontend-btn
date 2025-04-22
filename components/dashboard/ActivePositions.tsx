@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { usePositions } from "@/hooks/usePositions";
 import { formatCurrency } from "@/lib/utils";
-import ClosePositionButton from "@/components/trading/ClosePositionButton";
+import { ClosePositionButton } from "@/components/trading/ClosePositionButton";
 import FundingFeeTimer from "@/components/trading/FundingFeeTimer";
 import UnrealizedPnL from "@/components/trading/UnrealizedPnL";
 import RealTimeMarkPrice from "@/components/trading/RealTimeMarkPrice";
@@ -125,7 +125,9 @@ export default function ActivePositions() {
           console.error("Error closing demo position:", error);
           toast({
             title: "Error",
-            description: `Failed to close demo position: ${error.message}`,
+            description: `Failed to close demo position: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
             variant: "destructive",
           });
           throw error; // Rethrow to be caught by the outer try/catch
@@ -162,7 +164,7 @@ export default function ActivePositions() {
 
         // Close the blockchain position - no try/catch needed here
         // as the contract service will handle errors
-        const result = await closeContractPosition(BigInt(positionId));
+        const result = await closeContractPosition(positionId);
 
         // Simply check the result object for errors or special cases
         if (result && result.error) {
@@ -170,8 +172,11 @@ export default function ActivePositions() {
           // Error has already been handled by the contract service
           // Just update UI if necessary
           if (
-            result.message &&
-            result.message.includes("Position already closed")
+            typeof result.error === 'object' && 
+            result.error !== null && 
+            'message' in result.error &&
+            typeof (result.error as any).message === 'string' &&
+            (result.error as any).message.includes("Position already closed")
           ) {
             refreshPositions(position.id);
           }
@@ -179,10 +184,10 @@ export default function ActivePositions() {
         }
 
         // Check if position was already closed
-        if (result && result.alreadyClosed) {
+        if (result && "alreadyClosed" in result && result.alreadyClosed) {
           console.log(
             "Position already closed on the blockchain, updating UI:",
-            result.positionId
+            "positionId" in result ? result.positionId : position.id
           );
           refreshPositions(position.id);
           return;
@@ -386,8 +391,7 @@ export default function ActivePositions() {
                   <div className="flex items-center gap-2">
                     <TPSLForm position={position} />
                     <ClosePositionButton
-                      position={position}
-                      onClose={() => handleClosePosition(position)}
+                      positionId={position.id}
                     />
                   </div>
                 </td>

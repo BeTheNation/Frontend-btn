@@ -46,20 +46,6 @@ declare module "viem" {
   export function formatEther(value: bigint): string;
 }
 
-declare module "hardhat" {
-  import { ContractFactory } from "ethers";
-
-  export const ethers: {
-    getContractFactory(name: string): Promise<ContractFactory>;
-    parseEther(value: string): bigint;
-    getSigners(): Promise<any[]>;
-    provider: {
-      getBalance(address: string): Promise<any>;
-    };
-    // Add more types as needed
-  };
-}
-
 declare module "dotenv";
 
 declare module "chai";
