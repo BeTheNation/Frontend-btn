@@ -40,6 +40,7 @@ interface TradeHistoryItem {
 interface PositionStore {
   positions: Position[];
   tradeHistory: TradeHistoryItem[];
+  loading?: boolean;
   addPosition: (position: Position) => void;
   closePosition: (
     id: string,

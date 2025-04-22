@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,64 +10,85 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useContract } from "@/hooks/useContract";
-import { useDemoMode } from "@/hooks/useDemoMode";
-import { toast } from "@/components/ui/use-toast";
+import { usePositions } from "@/hooks/usePositions";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ClosePositionButtonProps {
-  position: any;
-  onClose: () => void;
+  positionId: string;
 }
 
-export default function ClosePositionButton({
-  position,
-  onClose,
-}: ClosePositionButtonProps) {
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+export function ClosePositionButton({ positionId }: ClosePositionButtonProps) {
+  const [open, setOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const { handleClosePosition } = useContract();
-  const { isDemoMode } = useDemoMode();
+  const { closePosition, isLoading, isClosingPosition } = usePositions();
+  const { toast } = useToast();
 
   const handleConfirmClose = async () => {
-    console.log("Closing position:", {
-      id: position?.id,
-      countryName: position?.country?.name,
-      direction: position?.direction,
-    });
+    // Prevent double submission
+    if (isClosing) return;
+
+    // Validate positionId
+    if (!positionId) {
+      console.error("Attempted to close position with empty ID");
+      toast({
+        title: "Invalid position",
+        description: "Cannot close position with invalid ID",
+        variant: "destructive",
+      });
+      setOpen(false);
+      return;
+    }
+
+    // Check if position exists in the state before proceeding
+    // This extra validation can prevent errors with demo positions
+    if (positionId.startsWith("demo-")) {
+      console.log(`Attempting to close demo position: ${positionId}`);
+    }
 
     setIsClosing(true);
 
     try {
-      if (!position || !position.id) {
-        throw new Error("Invalid position data");
+      // Call the closePosition function which handles all error cases
+      const result = await closePosition(positionId);
+
+      // Check if the operation was successful
+      if (result && result.success) {
+        toast({
+          title: "Position closed",
+          description: "Your position has been closed successfully",
+        });
+      } else if (result && result.code === "POSITION_NOT_FOUND") {
+        toast({
+          title: "Position already closed",
+          description: "This position has already been closed or doesn't exist",
+        });
+      } else if (result && result.code === "DEMO_POSITION_ERROR") {
+        toast({
+          title: "Demo position error",
+          description:
+            "This position may have already been closed or doesn't exist in the demo store",
+        });
+      } else if (!result) {
+        // Handle the case where result is undefined or null
+        console.warn("No result returned from closePosition");
+        toast({
+          title: "Position close status unknown",
+          description:
+            "The operation completed but the status is unknown. Please check your positions list.",
+        });
       }
-
-      // Handle position closure through onClose callback from ActivePositions
-      const result = await onClose();
-
-      // Check if we got an error object back
-      if (result && result.error) {
-        console.log("Received error result in ClosePositionButton:", result);
-        // Error has already been handled by the contract service with toasts
-        setIsConfirmOpen(false);
-        return;
-      }
-
-      // Check if position was already closed
-      if (result && result.alreadyClosed) {
-        console.log("Position was already closed:", result);
-        // This has already been handled properly
-        setIsConfirmOpen(false);
-        return;
-      }
-
-      setIsConfirmOpen(false);
-      // No need for success toast as it's already shown by contract service
-    } catch (error) {
+      // Other error cases are handled within the closePosition function
+    } catch (error: any) {
+      // This should only happen for truly unexpected errors not handled by the hook
       console.error("Unexpected error in ClosePositionButton:", error);
-      // This should never happen with our new error handling approach
+      toast({
+        title: "Error closing position",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
     } finally {
       setIsClosing(false);
+      setOpen(false);
     }
   };
 
@@ -76,72 +97,44 @@ export default function ClosePositionButton({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => setIsConfirmOpen(true)}
+        onClick={() => setOpen(true)}
+        disabled={
+          isClosing ||
+          isLoading ||
+          (isClosingPosition && isClosingPosition !== positionId)
+        }
+        className="bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-500"
       >
-        Close
+        {isClosingPosition === positionId ? "Closing..." : "Close"}
       </Button>
 
-      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Close Position</DialogTitle>
             <DialogDescription>
-              Are you sure you want to close this position?
+              Are you sure you want to close this position? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-2">
-              <img
-                src={position.country.flagUrl || "/placeholder.svg"}
-                alt={`${position.country.name} flag`}
-                className="w-6 h-6 rounded-full"
-              />
-              <h3 className="font-medium">{position.country.name} GDP</h3>
-              <span
-                className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${
-                  position.direction === "long"
-                    ? "bg-green-500/20 text-green-500"
-                    : "bg-red-500/20 text-red-500"
-                }`}
-              >
-                {position.direction === "long" ? "Long" : "Short"}
-              </span>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-[#333333]">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Position Size</span>
-                <span>${position.size * position.leverage} USDC</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Entry Price</span>
-                <span>${position.entryPrice}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Current Price</span>
-                <span>${position.markPrice}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Estimated PnL</span>
-                <span className="text-green-500">+$24.50 (2.45%)</span>
-              </div>
-            </div>
-          </div>
-
           <DialogFooter>
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-2 w-full">
-              <Button
-                variant="outline"
-                onClick={() => setIsConfirmOpen(false)}
-                disabled={isClosing}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleConfirmClose} disabled={isClosing}>
-                {isClosing ? "Closing..." : "Close Position"}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isClosing}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmClose}
+              disabled={isClosing || isLoading || isClosingPosition !== null}
+            >
+              {isClosing ? "Closing..." : "Close Position"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -12,7 +12,7 @@ import { generateId } from "@/lib/utils";
  */
 export function usePositionCreation() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { handleOpenPosition } = useContract();
+  const { openPosition } = useContract();
   const { addPosition } = usePositions();
   const { isDemoMode } = useDemoMode();
   const { toast } = useToast();
@@ -60,7 +60,7 @@ export function usePositionCreation() {
         return { success: true, position: demoPosition };
       } else {
         // Use the contract method when not in demo mode
-        const result = await handleOpenPosition(
+        const result = await openPosition(
           countryId,
           direction,
           leverage,
@@ -75,11 +75,47 @@ export function usePositionCreation() {
           });
           return { success: true, position: result };
         } else {
-          throw new Error(result?.message || "Failed to create position");
+          // Check if this is specifically an approval error
+          if (
+            result?.code === "APPROVAL_REQUIRED" ||
+            result?.code === "INSUFFICIENT_ALLOWANCE" ||
+            result?.code === "CONTRACT_ERROR" ||
+            (result?.error &&
+              (result.error.includes("allowance") ||
+                result.error.includes("ERC20") ||
+                result.error.includes("approve") ||
+                result.error.includes("0xfb8f41b2")))
+          ) {
+            return {
+              success: false,
+              error: result.error || "USDC approval required",
+              code: "USDC_APPROVAL_REQUIRED",
+            };
+          }
+          throw new Error(result?.error || "Failed to create position");
         }
       }
     } catch (error: any) {
       console.error("Error creating position:", error);
+
+      // Check for USDC approval errors in the catch block too
+      if (
+        error.code === "INSUFFICIENT_ALLOWANCE" ||
+        (error.message &&
+          (error.message.includes("allowance") ||
+            error.message.includes("ERC20") ||
+            error.message.includes("approve") ||
+            error.message.includes("0xfb8f41b2") || // Specific error signature for insufficient allowance
+            (error.message.includes("signature") &&
+              error.message.includes("0xfb8f41b2"))))
+      ) {
+        return {
+          success: false,
+          error: "USDC approval required before opening position",
+          code: "USDC_APPROVAL_REQUIRED",
+        };
+      }
+
       toast({
         title: "Error Creating Position",
         description:

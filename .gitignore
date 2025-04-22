@@ -36,6 +36,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Hardhat artifacts and cache
-/artifacts
-/cache
+# Foundry
+SC/cache/
+SC/out/
+SC/broadcast/
+!SC/broadcast/*/31337/
+!SC/broadcast/*/1337/
+!SC/broadcast/**/dry-run/

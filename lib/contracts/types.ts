@@ -22,7 +22,7 @@ export interface ContractPosition {
   positionId: bigint;
   countryId: string;
   trader: Address;
-  direction: boolean;
+  direction: number;
   size: bigint;
   leverage: number;
   entryPrice: bigint;
@@ -30,6 +30,7 @@ export interface ContractPosition {
   takeProfit: bigint;
   stopLoss: bigint;
   isOpen: boolean;
+  liquidationPrice: bigint;
 }
 
 export interface TPSLConfig {

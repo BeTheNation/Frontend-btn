@@ -14,6 +14,7 @@ import { CountryPositionsList } from "@/components/trading/CountryPositionsList"
 import { useContract } from "@/hooks/useContract";
 import { useToast } from "@/components/ui/use-toast";
 import { usePositionCreation } from "@/hooks/usePositionCreation";
+import { USDCApproval } from "@/components/ui/usdc-approval";
 
 // Sample country data - in a real app, this would come from an API
 const countryData = {
@@ -49,6 +50,7 @@ export default function CountryPage() {
   const [amount, setAmount] = useState(500);
   const { toast } = useToast();
   const { createPosition, isProcessing } = usePositionCreation();
+  const [needsUSDCApproval, setNeedsUSDCApproval] = useState(false);
 
   const [country, setCountry] = useState(countryData.usa);
 
@@ -83,6 +85,16 @@ export default function CountryPage() {
     if (!isConnected || !isAmountValid || isProcessing) return;
 
     try {
+      // If USDC approval is needed, don't proceed with the trade
+      if (needsUSDCApproval) {
+        toast({
+          title: "USDC Approval Required",
+          description: "Please approve USDC spending before opening a position",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Show loading toast
       toast({
         title: "Processing Trade",
@@ -103,6 +115,14 @@ export default function CountryPage() {
       if (result?.success) {
         // Clear the form or update UI as needed
         // No need for additional toast as the createPosition function handles it
+      } else if (result?.code === "USDC_APPROVAL_REQUIRED") {
+        // Handle USDC approval requirement
+        setNeedsUSDCApproval(true);
+        toast({
+          title: "USDC Approval Required",
+          description: "Please approve USDC spending before opening a position",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       toast({
@@ -112,6 +132,23 @@ export default function CountryPage() {
         variant: "destructive",
       });
     }
+  };
+
+  // Handle successful USDC approval
+  const handleApprovalSuccess = () => {
+    setNeedsUSDCApproval(false);
+    toast({
+      title: "USDC Approved",
+      description:
+        "You can now place your trade. Proceeding with transaction...",
+      variant: "default",
+    });
+
+    // Add a short delay before retrying the trade to ensure the UI updates first
+    setTimeout(() => {
+      // Retry the trade now that we have approval
+      handlePlaceTrade();
+    }, 1000);
   };
 
   return (
@@ -375,13 +412,31 @@ export default function CountryPage() {
               </div>
             </div>
 
+            {/* Add USDC Approval UI when needed */}
+            {needsUSDCApproval && (
+              <div className="mb-4 bg-[#1A1A1A] rounded-lg border border-[#333333]">
+                <USDCApproval
+                  amount={amount.toString()}
+                  onSuccess={handleApprovalSuccess}
+                />
+              </div>
+            )}
+
             <button
               className={`w-full py-3 rounded-md font-medium shadow-lg transition-colors ${
-                isConnected && isAmountValid && !isProcessing
+                isConnected &&
+                isAmountValid &&
+                !isProcessing &&
+                !needsUSDCApproval
                   ? "bg-[#1a7cff] text-white hover:bg-blue-500"
                   : "bg-gray-600 text-gray-300 cursor-not-allowed"
               }`}
-              disabled={!isConnected || !isAmountValid || isProcessing}
+              disabled={
+                !isConnected ||
+                !isAmountValid ||
+                isProcessing ||
+                needsUSDCApproval
+              }
               onClick={handlePlaceTrade}
             >
               {!isConnected
@@ -390,6 +445,8 @@ export default function CountryPage() {
                 ? "Insufficient Balance"
                 : isProcessing
                 ? "Processing..."
+                : needsUSDCApproval
+                ? "Approve USDC First"
                 : "Place Trade"}
             </button>
           </div>

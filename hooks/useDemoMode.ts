@@ -120,15 +120,37 @@ export const useDemoModeStore = create<DemoModeStore>()(
         // Find position
         const position = get().demoPositions.find((p) => p.id === id);
         if (!position) {
-          console.error(`Position with ID ${id} not found`);
+          console.error(`Position with ID ${id} not found in demo positions`);
+
+          // Check if position was already closed by looking in history
+          const alreadyClosed = get().demoTradeHistory.some(
+            (trade) => trade.positionId === id && trade.type === "close"
+          );
+
+          if (alreadyClosed) {
+            console.log(
+              `Position ${id} was already closed in a previous session`
+            );
+            // Return silently to prevent errors in UI - the UI will show appropriate message
+            return;
+          }
+
+          // Instead of throwing an error, log it and return silently
+          console.log(
+            `Position with ID ${id} not found in active positions - skipping`
+          );
           return;
         }
+
+        // Use exitPrice (current market price) if provided, otherwise use position's markPrice
+        const finalPrice = exitPrice || position.markPrice;
 
         // Log closing details
         console.log("Closing demo position:", {
           id,
           position,
           currentBalance: get().demoBalance,
+          exitPrice: finalPrice,
         });
 
         // Remove from active positions
@@ -140,8 +162,8 @@ export const useDemoModeStore = create<DemoModeStore>()(
         if (!pnl) {
           const isLong = position.direction === "long";
           const priceDiff = isLong
-            ? position.markPrice - position.entryPrice
-            : position.entryPrice - position.markPrice;
+            ? finalPrice - position.entryPrice
+            : position.entryPrice - finalPrice;
 
           const pnlPercent = priceDiff / position.entryPrice;
           pnl = position.size * position.leverage * pnlPercent;
@@ -161,6 +183,7 @@ export const useDemoModeStore = create<DemoModeStore>()(
           fundingFee,
           totalPnl,
           returnAmount,
+          exitPrice: finalPrice,
         });
 
         // Return funds to balance
@@ -179,7 +202,7 @@ export const useDemoModeStore = create<DemoModeStore>()(
           size: position.size,
           leverage: position.leverage,
           entryPrice: position.entryPrice,
-          exitPrice: exitPrice || position.markPrice,
+          exitPrice: finalPrice,
           pnl,
           fundingFee,
         };

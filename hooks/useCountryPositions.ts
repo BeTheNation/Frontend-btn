@@ -1,87 +1,208 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { usePositions } from "./usePositions";
+import { usePositions } from "@/hooks/usePositions";
+import { useMemo, useState, useEffect } from "react";
 import { Position, PositionWithPnL } from "@/types/position";
-import { useWeb3 } from "./useWeb3";
-import { useDemoMode } from "./useDemoMode";
+import { toast } from "@/components/ui/use-toast";
+
+// Position statuses
+export enum PositionStatus {
+  OPEN = "OPEN",
+  CLOSING = "CLOSING",
+  CLOSED = "CLOSED",
+}
+
+// Extended position type with status
+export interface ExtendedPosition extends PositionWithPnL {
+  status: PositionStatus;
+  closedAt?: Date;
+}
 
 /**
- * Custom hook to get positions for a specific country with real-time P&L calculations
+ * Custom hook to get positions for a specific country with PnL calculations
  */
 export function useCountryPositions(countryId: string, currentPrice: number) {
-  const { positions } = usePositions();
-  const { isDemoMode } = useDemoMode();
-  const { isConnected } = useWeb3();
-  const [isLoading, setIsLoading] = useState(true);
+  const { positions: allPositions, isLoading } = usePositions();
+  // Track closed positions separately so they can remain visible
+  const [closedPositions, setClosedPositions] = useState<ExtendedPosition[]>(
+    []
+  );
 
-  // Filter positions for the specific country
-  const countryPositions = useMemo(() => {
-    if (!positions || !countryId) return [];
+  // Track which positions are in the process of closing
+  const [closingPositions, setClosingPositions] = useState<string[]>([]);
 
-    return positions.filter((position) => position.country.id === countryId);
-  }, [positions, countryId]);
+  // Filter positions by country ID and add P&L calculations
+  const positions = useMemo(() => {
+    if (!allPositions || allPositions.length === 0) return [];
 
-  // Calculate P&L and additional data for each position
-  const positionsWithPnL: PositionWithPnL[] = useMemo(() => {
-    return countryPositions.map((position) => {
-      // Calculate unrealized P&L based on position direction and price change
-      const priceChange = currentPrice - position.entryPrice;
-      let unrealizedPnL = 0;
+    try {
+      // First, filter positions for this country
+      const filteredPositions = allPositions.filter(
+        (pos) => pos.country.id === countryId
+      );
 
-      if (position.direction === "long") {
-        // For long positions, profit when price goes up
-        unrealizedPnL =
-          (priceChange / position.entryPrice) *
-          position.size *
-          position.leverage;
-      } else {
-        // For short positions, profit when price goes down
-        unrealizedPnL =
-          (-priceChange / position.entryPrice) *
-          position.size *
-          position.leverage;
-      }
+      // Then add P&L calculations and convert to extended positions
+      return filteredPositions.map((position): ExtendedPosition => {
+        // Calculate P&L based on direction and price difference
+        let unrealizedPnL = 0;
+        const leveragedSize = position.size * position.leverage;
+        const priceDiff = currentPrice - position.entryPrice;
 
-      // Calculate liquidation price based on direction and leverage
-      let liquidationPrice = 0;
-      if (position.direction === "long") {
-        // Long positions get liquidated when price drops
-        // Liquidation occurs at: entry - (entry / leverage)
-        liquidationPrice =
-          position.entryPrice - position.entryPrice / position.leverage;
-      } else {
-        // Short positions get liquidated when price rises
-        // Liquidation occurs at: entry + (entry / leverage)
-        liquidationPrice =
-          position.entryPrice + position.entryPrice / position.leverage;
-      }
+        if (position.direction === "long") {
+          unrealizedPnL = (priceDiff / position.entryPrice) * leveragedSize;
+        } else {
+          unrealizedPnL = (-priceDiff / position.entryPrice) * leveragedSize;
+        }
 
-      // Calculate P&L percentage
-      const pnlPercentage = (unrealizedPnL / position.size) * 100;
+        // Calculate liquidation price based on direction and leverage
+        const liquidationPrice = calculateLiquidationPrice(
+          position,
+          position.leverage
+        );
 
-      return {
-        ...position,
-        unrealizedPnL,
-        liquidationPrice,
-        pnlPercentage,
-      };
-    });
-  }, [countryPositions, currentPrice]);
+        // Add status based on whether position is in closing process
+        const status = closingPositions.includes(position.id)
+          ? PositionStatus.CLOSING
+          : PositionStatus.OPEN;
 
-  // Set loading state
+        return {
+          ...position,
+          unrealizedPnL,
+          liquidationPrice,
+          status,
+        };
+      });
+    } catch (error) {
+      console.error("Error processing positions:", error);
+      toast({
+        title: "Error loading positions",
+        description: "Failed to load position data",
+        variant: "destructive",
+      });
+      return [];
+    }
+  }, [allPositions, countryId, currentPrice, closingPositions]);
+
+  // Calculate total P&L for active positions
+  const totalPnL = useMemo(() => {
+    if (!positions || positions.length === 0) return 0;
+    return positions.reduce((sum, pos) => sum + pos.unrealizedPnL, 0);
+  }, [positions]);
+
+  // Combine active and closed positions for display
+  const allDisplayPositions = useMemo(() => {
+    return [
+      ...positions,
+      ...closedPositions.filter((p) => p.country.id === countryId),
+    ];
+  }, [positions, closedPositions, countryId]);
+
+  // Function to mark a position as closing
+  const markPositionClosing = (positionId: string) => {
+    // Check if the position is already marked as closing
+    if (closingPositions.includes(positionId)) {
+      // If called again for the same position, toggle it off (cancel closing state)
+      setClosingPositions((prev) => prev.filter((id) => id !== positionId));
+      return;
+    }
+
+    // Check if the position exists at all
+    const positionExists =
+      positions.some((p) => p.id === positionId) ||
+      closedPositions.some((p) => p.id === positionId);
+
+    if (!positionExists) {
+      console.warn(
+        `Tried to mark non-existent position ${positionId} as closing`
+      );
+      return;
+    }
+
+    // Add to closing positions
+    setClosingPositions((prev) => [...prev, positionId]);
+  };
+
+  // Function to mark a position as closed
+  const markPositionClosed = (positionId: string) => {
+    // Find the position in our active positions
+    const position = positions.find((p) => p.id === positionId);
+
+    // Check if position already exists in closed positions
+    const alreadyClosed = closedPositions.some((p) => p.id === positionId);
+
+    if (alreadyClosed) {
+      console.log(`Position ${positionId} already marked as closed`);
+      // Remove from closing positions if it was there
+      setClosingPositions((prev) => prev.filter((id) => id !== positionId));
+      return;
+    }
+
+    if (!position) {
+      console.warn(
+        `Tried to mark non-existent position ${positionId} as closed`
+      );
+      // Remove from closing positions if it was there
+      setClosingPositions((prev) => prev.filter((id) => id !== positionId));
+      return;
+    }
+
+    // Create a closed position entry
+    const closedPosition: ExtendedPosition = {
+      ...position,
+      status: PositionStatus.CLOSED,
+      closedAt: new Date(),
+    };
+
+    // Add to closed positions
+    setClosedPositions((prev) => [...prev, closedPosition]);
+
+    // Remove from closing positions
+    setClosingPositions((prev) => prev.filter((id) => id !== positionId));
+  };
+
+  // Clean up old closed positions after a certain time
   useEffect(() => {
-    setIsLoading(false);
+    const CLOSED_POSITION_DISPLAY_TIME = 60 * 1000; // 60 seconds
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      setClosedPositions((prev) =>
+        prev.filter((pos) => {
+          if (!pos.closedAt) return true;
+          const timeDiff = now.getTime() - pos.closedAt.getTime();
+          return timeDiff < CLOSED_POSITION_DISPLAY_TIME;
+        })
+      );
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   return {
-    positions: positionsWithPnL,
+    positions: allDisplayPositions,
+    hasPositions: allDisplayPositions.length > 0,
+    activePositions: positions,
+    closedPositions: closedPositions.filter((p) => p.country.id === countryId),
     isLoading,
-    hasPositions: positionsWithPnL.length > 0,
-    totalPnL: positionsWithPnL.reduce((sum, pos) => sum + pos.unrealizedPnL, 0),
-    totalPositionsSize: positionsWithPnL.reduce(
-      (sum, pos) => sum + pos.size,
-      0
-    ),
+    totalPnL,
+    markPositionClosing,
+    markPositionClosed,
   };
+}
+
+// Helper function to calculate liquidation price
+function calculateLiquidationPrice(
+  position: Position,
+  leverage: number
+): number {
+  // Simplified liquidation calculation
+  // In a real app, this would be more complex with funding rates, etc.
+  const maintenanceMargin = 0.05; // 5% maintenance margin
+  const liquidationThreshold = 1 / leverage - maintenanceMargin;
+
+  if (position.direction === "long") {
+    return position.entryPrice * (1 - liquidationThreshold);
+  } else {
+    return position.entryPrice * (1 + liquidationThreshold);
+  }
 }

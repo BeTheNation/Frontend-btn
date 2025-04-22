@@ -6,10 +6,11 @@ import { toast } from "@/components/ui/use-toast";
  * Standard error types in the application
  */
 export enum ErrorType {
-  NETWORK = "network",
   CONTRACT = "contract",
-  VALIDATION = "validation",
   WALLET = "wallet",
+  NETWORK = "network",
+  APPROVAL = "approval",
+  VALIDATION = "validation",
   UNKNOWN = "unknown",
 }
 
@@ -27,60 +28,97 @@ export interface ErrorResponse {
  * Format contract errors into standardized error responses
  */
 export function formatContractError(error: any): ErrorResponse {
-  console.error("Contract error:", error);
+  if (!error) {
+    return {
+      message: "Unknown error occurred",
+      type: ErrorType.UNKNOWN,
+    };
+  }
 
-  // Default error response
-  const errorResponse: ErrorResponse = {
-    message: "An unknown error occurred",
-    type: ErrorType.UNKNOWN,
-  };
+  // Check for specific error patterns
+  if (error.message?.includes("User denied")) {
+    return {
+      message: "Transaction was rejected",
+      type: ErrorType.WALLET,
+      code: "USER_REJECTED",
+    };
+  }
 
-  // Check if it's a ContractFunctionExecutionError from viem
+  // Handle viem ContractFunctionExecutionError
   if (
     error.name === "ContractFunctionExecutionError" ||
-    (error.message && error.message.includes("ContractFunctionExecutionError"))
+    error.message?.includes("ContractFunctionExecutionError")
   ) {
-    // Extract the reason from the error message
-    const reasonMatch = error.message?.match(/reason="([^"]+)"/);
-    const reason = reasonMatch ? reasonMatch[1] : "Contract execution failed";
+    try {
+      // Try to extract meaningful information from the error
+      const reasonMatch = error.message?.match(/reason="([^"]+)"/);
+      let errorMessage = "Contract execution failed";
 
-    errorResponse.message = reason;
-    errorResponse.type = ErrorType.CONTRACT;
-    errorResponse.code = "CONTRACT_EXECUTION_ERROR";
-    return errorResponse;
+      if (reasonMatch && reasonMatch[1]) {
+        errorMessage = reasonMatch[1];
+      } else if (error.shortMessage) {
+        errorMessage = error.shortMessage;
+      } else if (error.details) {
+        errorMessage = error.details;
+      }
+
+      return {
+        message: errorMessage,
+        type: ErrorType.CONTRACT,
+        code: error.code || "EXECUTION_FAILED",
+        details: {
+          originalError: error,
+        },
+      };
+    } catch (decodingError) {
+      console.error("Error decoding contract error:", decodingError);
+    }
   }
 
-  // Check for specific error codes
-  if (error.code === "INSUFFICIENT_FUNDS") {
-    errorResponse.message = "Insufficient funds for transaction";
-    errorResponse.type = ErrorType.WALLET;
-    errorResponse.code = error.code;
-  } else if (error.code === "UNPREDICTABLE_GAS_LIMIT") {
-    errorResponse.message =
-      "Transaction may fail. Please try with different parameters";
-    errorResponse.type = ErrorType.CONTRACT;
-    errorResponse.code = error.code;
-  } else if (error.reason) {
-    errorResponse.message = error.reason;
-    errorResponse.type = ErrorType.CONTRACT;
-  } else if (error.message && error.message.includes("User rejected")) {
-    errorResponse.message = "Transaction was rejected";
-    errorResponse.type = ErrorType.WALLET;
-  } else if (error.message) {
-    errorResponse.message = error.message;
+  // Handle insufficient funds errors
+  if (
+    error.message?.includes("insufficient funds") ||
+    error.message?.includes("Insufficient funds")
+  ) {
+    return {
+      message: "Not enough funds to complete this transaction",
+      type: ErrorType.WALLET,
+      code: "INSUFFICIENT_FUNDS",
+    };
   }
 
-  // Add details for debugging
-  errorResponse.details = {
-    originalError: {
-      message: error.message,
-      code: error.code,
-      reason: error.reason,
-      data: error.data,
-    },
+  // Handle gas estimation errors
+  if (
+    error.code === "UNPREDICTABLE_GAS_LIMIT" ||
+    error.message?.includes("gas required exceeds")
+  ) {
+    return {
+      message: "Cannot estimate transaction gas. The transaction may fail.",
+      type: ErrorType.CONTRACT,
+      code: "GAS_ESTIMATION_FAILED",
+    };
+  }
+
+  // Handle network errors
+  if (
+    error.message?.includes("network") ||
+    error.message?.includes("connection") ||
+    error.message?.includes("timeout")
+  ) {
+    return {
+      message: "Network error. Please check your connection and try again.",
+      type: ErrorType.NETWORK,
+      code: "NETWORK_ERROR",
+    };
+  }
+
+  // Default error handling
+  return {
+    message: error.message || "An error occurred",
+    type: ErrorType.UNKNOWN,
+    code: error.code,
+    details: error,
   };
-
-  return errorResponse;
 }
 
 /**
@@ -182,6 +220,21 @@ export function debugContractFunctionExecutionError(error: any): {
       result.reason = reasonMatch[1];
     } else if (error.reason) {
       result.reason = error.reason;
+    } else {
+      // Try alternative formats
+      const customErrorMatch = error.message.match(
+        /execution reverted \("([^"]+)"\)/
+      );
+      if (customErrorMatch && customErrorMatch[1]) {
+        result.reason = customErrorMatch[1];
+      } else if (error.message.includes("execution reverted")) {
+        const revertMatch = error.message.match(
+          /execution reverted:?\s*(.+?)($|\n)/i
+        );
+        if (revertMatch && revertMatch[1]) {
+          result.reason = revertMatch[1].trim();
+        }
+      }
     }
   }
 
@@ -194,7 +247,79 @@ export function debugContractFunctionExecutionError(error: any): {
     value: error.value,
     data: error.data,
     message: error.message,
+    // If the error has a cause, include that as well
+    cause: error.cause
+      ? {
+          code: error.cause.code,
+          message: error.cause.message,
+        }
+      : undefined,
   };
 
   return result;
+}
+
+/**
+ * Convert technical error messages to user-friendly descriptions
+ */
+export function getUserFriendlyErrorMessage(error: ErrorResponse): string {
+  // Map common technical errors to user-friendly messages
+  const errorMappings: Record<string, string> = {
+    "gas required exceeds allowance":
+      "Transaction requires more gas than available. Try with simpler parameters.",
+    "insufficient funds":
+      "You don't have enough funds in your wallet to complete this transaction.",
+    "user rejected transaction": "You cancelled the transaction.",
+    "nonce too high": "Please refresh the page and try again.",
+    "execution reverted":
+      "The transaction was rejected by the smart contract. Please check your inputs.",
+  };
+
+  // Check if the error message contains any of the technical terms
+  for (const [technicalTerm, friendlyMessage] of Object.entries(
+    errorMappings
+  )) {
+    if (error.message.toLowerCase().includes(technicalTerm.toLowerCase())) {
+      return friendlyMessage;
+    }
+  }
+
+  // If no mapping found, return the original message
+  return error.message;
+}
+
+/**
+ * Import the viem error decoder to use its functionality
+ */
+import { handleContractFunctionExecutionError } from "./viem-error-decoder";
+
+/**
+ * Enhanced error handler that uses both formatContractError and handleContractFunctionExecutionError
+ */
+export function handleTransactionError(error: any): ErrorResponse {
+  console.debug("Handling transaction error:", error);
+
+  // Use the viem-specific decoder for ContractFunctionExecutionError
+  if (
+    error.name === "ContractFunctionExecutionError" ||
+    error.message?.includes("ContractFunctionExecutionError")
+  ) {
+    try {
+      const decodedError = handleContractFunctionExecutionError(error);
+      return {
+        message: decodedError.message,
+        type: ErrorType.CONTRACT,
+        code: decodedError.code,
+      };
+    } catch (decodingError) {
+      console.error(
+        "Error in handleContractFunctionExecutionError:",
+        decodingError
+      );
+      // Fall back to the standard formatter
+    }
+  }
+
+  // Use the standard error formatter for other cases
+  return formatContractError(error);
 }

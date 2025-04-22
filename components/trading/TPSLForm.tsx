@@ -49,7 +49,6 @@ export default function TPSLForm({ position }: TPSLFormProps) {
         // Handle real position
         console.log("Setting TP/SL for real position:", position.id);
         await handleSetTPSL(
-          BigInt(position.id),
           Number(takeProfit),
           Number(stopLoss)
         );
