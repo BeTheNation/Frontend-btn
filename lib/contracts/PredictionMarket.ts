@@ -92,16 +92,16 @@ export const PREDICTION_MARKET_ABI = [
 
 // Contract addresses for different networks
 const CONTRACT_ADDRESSES: Record<number, Address> = {
-  // New contract addresses from our Sepolia deployment
-  11155111: "0x3Bc2f3BD1E74F669C24fF6d4D53A5DFfb6d5B08F", // Sepolia testnet - PredictionMarket
-  31337: "0x3Bc2f3BD1E74F669C24fF6d4D53A5DFfb6d5B08F", // Use Sepolia for local testing too
+  // New contract addresses from our Base Sepolia deployment
+  84532: "0x3Bc2f3BD1E74F669C24fF6d4D53A5DFfb6d5B08F", // Base Sepolia testnet - PredictionMarket
+  31337: "0x3Bc2f3BD1E74F669C24fF6d4D53A5DFfb6d5B08F", // Use Base Sepolia for local testing too
   // Add more networks as needed
 };
 
 // USDC token addresses
 export const USDC_ADDRESSES: Record<number, Address> = {
-  11155111: "0x4114d4AEae92Bad30E4cFaE6a85c6db0c3c5dA12", // Sepolia testnet - MockUSDC
-  31337: "0x4114d4AEae92Bad30E4cFaE6a85c6db0c3c5dA12", // Use Sepolia for local testing too
+  84532: "0x4114d4AEae92Bad30E4cFaE6a85c6db0c3c5dA12", // Base Sepolia testnet - MockUSDC
+  31337: "0x4114d4AEae92Bad30E4cFaE6a85c6db0c3c5dA12", // Use Base Sepolia for local testing too
 };
 
 /**
@@ -125,10 +125,10 @@ export function getPredictionMarketContract(
     }
 
     // Get contract address for current chain
-    const contractAddress = getContractAddress(chainId || 11155111);
+    const contractAddress = getContractAddress(chainId || 84532);
     console.log(
       `Using contract address: ${contractAddress} for chain ID: ${
-        chainId || 11155111
+        chainId || 84532
       }`
     );
 
@@ -156,8 +156,8 @@ export const validateContractAddress = (
   if (address === "0x0000000000000000000000000000000000000000") {
     console.warn(
       "%c⚠️ DEMO MODE ACTIVE - NO CONTRACT DEPLOYED ⚠️\n" +
-        "This app is running in demo mode because there is no contract deployed on Sepolia yet.\n" +
-        "All transactions will be simulated. Deploy the contract to Sepolia and update the address in PredictionMarket.ts to enable live transactions.",
+        "This app is running in demo mode because there is no contract deployed on Base Sepolia yet.\n" +
+        "All transactions will be simulated. Deploy the contract to Base Sepolia and update the address in PredictionMarket.ts to enable live transactions.",
       "background: #FFC107; color: #000; font-size: 14px; padding: 5px; border-radius: 3px;"
     );
     return false;
@@ -169,23 +169,25 @@ export const validateContractAddress = (
 
 /**
  * Gets contract address for the specified chain
- * If no chainId is provided (not connected to wallet), use Sepolia for demo
- * If address is not valid for current chainId, use Sepolia address
+ * If no chainId is provided (not connected to wallet), use Base Sepolia for demo
+ * If address is not valid for current chainId, use Base Sepolia address
  */
 export const getContractAddress = (chainId: number): Address => {
   const address = CONTRACT_ADDRESSES[chainId];
-  // Default to Sepolia if no address for chainId
-  return validateContractAddress(address)
-    ? address
-    : CONTRACT_ADDRESSES[11155111];
+  // Default to Base Sepolia if no address for chainId
+  return validateContractAddress(address) ? address : CONTRACT_ADDRESSES[84532];
 };
 
 /**
  * Gets USDC token address for the specified chain
  */
 export const getUSDCAddress = (chainId: number): Address => {
-  const address = USDC_ADDRESSES[chainId];
-  return address || USDC_ADDRESSES[11155111]; // Default to Sepolia
+  if (chainId === 84532) {
+    // Base Sepolia
+    return "0x4114d4AEae92Bad30E4cFaE6a85c6db0c3c5dA12"; // Address from MockUSDC that has been deployed
+  }
+  // fallback to address from USDC_ADDRESSES or Base Sepolia address if not found
+  return USDC_ADDRESSES[chainId] || USDC_ADDRESSES[84532];
 };
 
 /**
@@ -205,7 +207,7 @@ export const getUSDCContract = (provider: any, chainId?: number): any => {
     }
 
     // Get USDC address for current chain
-    const usdcAddress = getUSDCAddress(chainId || 11155111);
+    const usdcAddress = getUSDCAddress(chainId || 84532);
 
     // Basic ERC20 interface with just the approve function
     const abi = [
