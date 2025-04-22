@@ -1,6 +1,6 @@
 import { getDefaultWallets } from "@rainbow-me/rainbowkit";
 import { configureChains, createConfig } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { sepolia, baseSepolia } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 import { alchemyProvider } from "wagmi/providers/alchemy";
 
@@ -16,7 +16,7 @@ if (!alchemyKey) {
 }
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [sepolia],
+  [baseSepolia, sepolia],
   [alchemyProvider({ apiKey: alchemyKey }), publicProvider()]
 );
 
