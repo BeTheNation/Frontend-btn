@@ -1,8 +1,25 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LandingPage() {
+  const { openConnectModal } = useConnectModal();
+  const { isConnected } = useAccount();
+  const router = useRouter();
+
+  // Redirect to dashboard if wallet is connected
+  useEffect(() => {
+    if (isConnected) {
+      router.push("/dashboard");
+    }
+  }, [isConnected, router]);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#111214] text-white overflow-hidden">
       {/* Hero Section - Removed secondary header with logo and Connect Wallet button */}
@@ -29,11 +46,12 @@ export default function LandingPage() {
             </p>
 
             <div className="flex justify-center mt-[80px]">
-              <Link href="/dashboard">
-                <button className="justify-center text-white text-2xl font-medium font-['Inter'] leading-loose px-[26px] py-[16.25px] bg-gradient-to-br from-[#111214] to-[#22242a] rounded-[100px] shadow-[-12px_-12px_24px_0px_rgba(21,94,239,0.24)] shadow-[12px_12px_24px_0px_rgba(255,175,41,0.24)] outline outline-[3px] outline-[#155dee] inline-flex justify-center items-center gap-[13px] overflow-hidden">
+              <button 
+                onClick={openConnectModal}
+                className="justify-center text-white text-2xl font-medium font-['Inter'] leading-loose px-[26px] py-[16.25px] bg-gradient-to-br from-[#111214] to-[#22242a] rounded-[100px] shadow-[-12px_-12px_24px_0px_rgba(21,94,239,0.24)] shadow-[12px_12px_24px_0px_rgba(255,175,41,0.24)] outline outline-[3px] outline-[#155dee] inline-flex justify-center items-center gap-[13px] overflow-hidden"
+              >
                   Start Trading Now
                 </button>
-              </Link>
             </div>
           </div>
 
@@ -104,7 +122,7 @@ export default function LandingPage() {
              <div className="flex-1 justify-start text-[#f1f1ef] text-2xl font-medium flex-1 justify-start text-[#f1f1ef] text-2xl bg-gradient-to-b from-[#f1f1ef] to-[#f1f1ef]/20 text-[#f1f1ef] text-transparent bg-clip-text font-medium font-['Inter'] leading-7">Trade based on key economic indicators.</div>
               </div>
                <div className="self-stretch inline-flex justify-start items-center gap-4">
-            <div className="flex-1 justify-start text-[#777777] text-base font-medium font-['Inter'] leading-7">Unlike traditional markets, BeTheNation.Fun lets you predict a country’s future by evaluating key economic indicators such as GDP, inflation.</div>
+            <div className="flex-1 justify-start text-[#777777] text-base font-medium font-['Inter'] leading-7">Unlike traditional markets, BeTheNation.Fun lets you predict a country's future by evaluating key economic indicators such as GDP, inflation.</div>
         </div>
     </div>
 </div>
@@ -122,7 +140,7 @@ export default function LandingPage() {
              <div className="flex-1 justify-start text-[#f1f1ef] text-2xl flex-1 justify-start text-[#f1f1ef] text-2xl bg-gradient-to-b from-[#f1f1ef] to-[#f1f1ef]/20 text-[#f1f1ef] text-transparent bg-clip-text font-medium font-['Inter'] leading-7">Maximize your potential returns</div>
               </div>
                <div className="self-stretch inline-flex justify-start items-center gap-4">
-            <div className="flex-1 justify-start text-[#777777] text-base font-medium font-['Inter'] leading-7">With leverage up to 5x, you can control a larger position with a smaller capital investment. Whether you’re trading on economic growth or decline.</div>
+            <div className="flex-1 justify-start text-[#777777] text-base font-medium font-['Inter'] leading-7">With leverage up to 5x, you can control a larger position with a smaller capital investment. Whether you're trading on economic growth or decline.</div>
         </div>
     </div>
 </div>
@@ -164,7 +182,7 @@ export default function LandingPage() {
                     <div className="w-[244px] flex justify-between items-center">
                         <div className="justify-start text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Rank #1</div>
                         <div className="flex justify-start items-center gap-3">
-                            <img className="w-[33px] h-8 rounded-[100px]" src="https://placehold.co/33x32" />
+                            <img className="w-8 h-8 rounded-full object-cover" src="https://i.pravatar.cc/150?img=1" alt="User 1" />
                             <div className="justify-start text-white text-sm font-medium font-['Inter'] leading-tight">0xMeiline</div>
                         </div>
                     </div>
@@ -175,7 +193,7 @@ export default function LandingPage() {
                     <div className="w-[231px] flex justify-between items-center">
                         <div className="justify-start text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Rank #2</div>
                         <div className="flex justify-start items-center gap-3">
-                            <img className="w-[33px] h-8 rounded-[100px]" src="https://placehold.co/33x32" />
+                            <img className="w-8 h-8 rounded-full object-cover" src="https://i.pravatar.cc/150?img=2" alt="User 2" />
                             <div className="justify-start text-white text-sm font-medium font-['Inter'] leading-tight">0xClara</div>
                         </div>
                     </div>
@@ -188,7 +206,7 @@ export default function LandingPage() {
                     <div className="w-[247px] flex justify-between items-center">
                         <div className="justify-start text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Rank #3</div>
                         <div className="flex justify-start items-center gap-3">
-                            <img className="w-[33px] h-8 rounded-[100px]" src="https://placehold.co/33x32" />
+                            <img className="w-8 h-8 rounded-full object-cover" src="https://i.pravatar.cc/150?img=3" alt="User 3" />
                             <div className="justify-start text-white text-sm font-medium font-['Inter'] leading-tight">0xEdward</div>
                         </div>
                     </div>
@@ -201,7 +219,7 @@ export default function LandingPage() {
                     <div className="w-60 flex justify-between items-center">
                         <div className="justify-start text-white text-sm font-semibold font-['Inter'] leading-tight">Rank #167</div>
                         <div className="flex justify-start items-center gap-3">
-                            <img className="w-[33px] h-8 rounded-[100px]" src="https://placehold.co/33x32" />
+                            <img className="w-8 h-8 rounded-full object-cover" src="https://i.pravatar.cc/150?img=4" alt="User 4" />
                             <div className="justify-start text-white text-sm font-medium font-['Inter'] leading-tight">0xCeline</div>
                         </div>
                     </div>
@@ -226,70 +244,83 @@ export default function LandingPage() {
             <div className="w-[456.48px] h-[262px] p-[12.09px] left-[332px] top-[42px] absolute bg-[#202327] rounded-xl shadow-[0px_0.5038461685180664px_1.0076923370361328px_0px_rgba(16,24,40,0.06)] shadow-[0px_0.5038461685180664px_1.5115383863449097px_0px_rgba(16,24,40,0.10)] outline outline-[0.50px] outline-offset-[-0.50px] outline-[#323232] flex flex-col justify-start items-start gap-[10.08px] overflow-hidden">
                 <div className="self-stretch inline-flex justify-start items-center gap-[8.06px]">
                     <div className="flex-1 justify-start text-white text-[9.07px] font-medium font-['Inter'] leading-[14.11px]">Live Countryscore</div>
-                    <div className="w-[12.09px] h-[12.09px] relative overflow-hidden">
-                        <div className="w-px h-[8.06px] left-[5.54px] top-[2.02px] absolute outline outline-1 outline-offset-[-0.50px] outline-[#99a3b2]" />
-                    </div>
+                    <div className="justify-start text-[#70e000] text-[10.08px] font-medium font-['Inter'] leading-[14.11px]">1,839</div>
                 </div>
-                <div className="self-stretch flex-1 relative">
-                    <div className="w-[432.30px] h-[213.63px] left-0 top-0 absolute inline-flex flex-col justify-start items-start gap-1">
+                <div className="self-stretch flex-1 inline-flex justify-start items-start">
+                    <div className="flex-1 self-stretch relative">
+                        <div className="w-full h-[200px] left-0 top-0 absolute inline-flex flex-col justify-start items-start gap-2">
                         <div className="self-stretch flex-1 flex flex-col justify-between items-center">
-                            <div className="w-[432.30px] h-0 relative">
-                                <div className="w-[432px] h-0 left-0 top-0 absolute outline outline-[0.50px] outline-offset-[-0.25px] outline-[#323232]"></div>
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="self-stretch h-0 relative">
+                                        <div className="w-full h-0 left-0 top-0 absolute outline outline-[0.50px] outline-offset-[-0.25px] outline-[#323232]"></div>
                             </div>
-                            <div className="w-[432.30px] h-0 relative">
-                                <div className="w-[432px] h-0 left-0 top-0 absolute outline outline-[0.50px] outline-offset-[-0.25px] outline-[#323232]"></div>
+                                ))}
                             </div>
-                            <div className="w-[432.30px] h-0 relative">
-                                <div className="w-[432px] h-0 left-0 top-0 absolute outline outline-[0.50px] outline-offset-[-0.25px] outline-[#323232]"></div>
-                            </div>
-                            <div className="w-[432.30px] h-0 relative">
-                                <div className="w-[432px] h-0 left-0 top-0 absolute outline outline-[0.50px] outline-offset-[-0.25px] outline-[#323232]"></div>
-                            </div>
-                            <div className="w-[432.30px] h-0 relative">
-                                <div className="w-[432px] h-0 left-0 top-0 absolute outline outline-[0.50px] outline-offset-[-0.25px] outline-[#323232]"></div>
-                            </div>
-                            <div className="w-[432.30px] h-0 relative">
-                                <div className="w-[432px] h-0 left-0 top-0 absolute outline outline-[0.50px] outline-offset-[-0.25px] outline-[#323232]"></div>
+                            
+                            {/* Line Chart SVG */}
+                            <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                                {/* Gradient definition */}
+                                <defs>
+                                    <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#70E000" stopOpacity="0.2" />
+                                        <stop offset="100%" stopColor="#70E000" stopOpacity="0" />
+                                    </linearGradient>
+                                </defs>
+                                
+                                {/* Area under the line */}
+                                <path
+                                    d="M40,180 L100,120 L160,150 L220,100 L280,130 L340,80 L400,100 L460,70 L520,90 L580,60 L640,80 L700,50 L760,70 L760,200 L40,200 Z"
+                                    fill="url(#greenGradient)"
+                                />
+                                
+                                {/* Main line */}
+                                <path
+                                    d="M40,180 L100,120 L160,150 L220,100 L280,130 L340,80 L400,100 L460,70 L520,90 L580,60 L640,80 L700,50 L760,70"
+                                    stroke="#70E000"
+                                    strokeWidth="2"
+                                    fill="none"
+                                />
+                                
+                                {/* Data points */}
+                                {[
+                                    [40,180], [100,120], [160,150], [220,100], [280,130],
+                                    [340,80], [400,100], [460,70], [520,90], [580,60],
+                                    [640,80], [700,50], [760,70]
+                                ].map(([x, y], i) => (
+                                    <circle
+                                        key={i}
+                                        cx={x}
+                                        cy={y}
+                                        r="4"
+                                        fill="#70E000"
+                                    />
+                                ))}
+                            </svg>
+
+                            <div className="self-stretch px-6 inline-flex justify-between items-center">
+                                {['28 Apr', '29 Apr', '30 Apr', '1 May', '2 May', '3 May', '4 May', '5 May', '6 May', '7 May', '8 May', '9 May'].map((date) => (
+                                    <div key={date} className="justify-start text-[#697485] text-[8px] font-normal font-['Inter'] leading-[12px]">{date}</div>
+                                ))}
                             </div>
                         </div>
-                        <div className="self-stretch px-[12.09px] inline-flex justify-between items-center">
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">00.10</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">02.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">03.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">04.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">05.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">06.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">07.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">08.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">09.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">10.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">11.00</div>
-                            <div className="justify-start text-[#697485] text-[6.05px] font-normal font-['Inter'] leading-[9.07px]">12.00</div>
+                        <div className="w-full h-[180px] px-5 left-0 top-0 absolute inline-flex justify-between items-end">
+                            {[...Array(13)].map((_, i) => (
+                                <div key={i} className="w-8 self-stretch relative">
+                                    {i === 0 && <div className="w-8 h-[200px] left-0 top-[29px] absolute" />}
+                                </div>
+                            ))}
                         </div>
                     </div>
-                    <div className="w-[432.30px] h-[200.53px] px-[10.08px] left-0 top-0 absolute inline-flex justify-between items-end">
-                        <div className="w-[16.12px] self-stretch relative">
-                            <div className="w-[16.12px] h-[160.22px] left-0 top-[40.31px] absolute" />
-                        </div>
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[16.12px] self-stretch relative" />
-                        <div className="w-[404.08px] h-[165.26px] left-[18.14px] top-[15.26px] absolute">
-                            <div className="w-[404.08px] h-[156.70px] left-0 top-[8.57px] absolute bg-gradient-to-b from-[#70e000]/80 to-[#00820f]/0" />
-                            <div className="w-[403.08px] h-[155.69px] left-[1.01px] top-[8.57px] absolute outline outline-[1.51px] outline-offset-[-0.76px] outline-[#70e000]" />
+                    <div className="w-[30px] self-stretch flex justify-between items-start">
+                        <div className="w-[180px] h-0 origin-top-left rotate-90 outline outline-1 outline-offset-[-0.50px] outline-[#323232]"></div>
+                        <div className="w-[20px] self-stretch inline-flex flex-col justify-start items-start gap-[20px]">
+                            {['2500', '2000', '1500', '1000', '500'].map((value) => (
+                                <div key={value} className="self-stretch justify-start text-[#697485] text-[8px] font-normal font-['Inter'] leading-[12px]">{value}</div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="w-[1452px] h-[550px] left-[-688px] top-[-550px] absolute opacity-25 bg-gradient-to-b from-[#155dee] to-[#ffaf29] outline outline-[0.72px] outline-offset-[-0.36px] outline-black blur-[36.01px]" />
         </div>
         <div className="flex-1 h-[337px] p-6 relative bg-[#202122]/60 rounded-2xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-center items-start gap-6 overflow-hidden">
             <div className="self-stretch flex flex-col justify-start items-start gap-6">
@@ -302,8 +333,8 @@ export default function LandingPage() {
             </div>
             <div className="w-[336px] h-[274px] p-6 left-[266.50px] top-[32px] absolute bg-[#202326] rounded-3xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] flex flex-col justify-between items-start">
                 <div className="self-stretch inline-flex justify-end items-center gap-2.5">
-                    <div className="w-[35px] h-[35px] relative bg-white rounded-[35.35px] overflow-hidden">
-                        <img className="w-[52.50px] h-[35px] left-[-8px] top-0 absolute border-black" src="https://placehold.co/52x35" />
+                    <div className="w-[35px] h-[35px] relative rounded-[35.35px] overflow-hidden">
+                        <img className="w-full h-full object-cover" src="https://flagcdn.com/w80/us.png" alt="USA Flag" />
                     </div>
                     <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter']">USA</div>
                     <div className="px-1.5 py-1 bg-[#068621] rounded-[100px] outline outline-1 outline-offset-[-1px] outline-[#54bb54] flex justify-center items-center gap-2.5">
@@ -360,11 +391,11 @@ export default function LandingPage() {
             </p>
 
             {/* CTA button with golden glow effect */}
-            <Link href="/dashboard">
-              <button className="justify-center text-white text-2xl font-medium font-['Inter'] leading-loose px-[28px] py-[12px] bg-gradient-to-br from-[#111214] to-[#22242a] rounded-[100px] shadow-[-12px_-12px_24px_0px_rgba(21,94,239,0.24)] shadow-[12px_12px_24px_0px_rgba(255,175,41,0.24)] outline outline-[2px] outline-[#155dee] inline-flex justify-center items-center gap-[13px] overflow-hidden">
+            <button 
+                onClick={openConnectModal}
+                className="justify-center text-white text-2xl font-medium font-['Inter'] leading-loose px-[28px] py-[12px] bg-gradient-to-br from-[#111214] to-[#22242a] rounded-[100px] shadow-[-12px_-12px_24px_0px_rgba(21,94,239,0.24)] shadow-[12px_12px_24px_0px_rgba(255,175,41,0.24)] outline outline-[2px] outline-[#155dee] inline-flex justify-center items-center gap-[13px] overflow-hidden">
                 Sign Up Now and Start Trading!
-              </button>
-            </Link>
+            </button>
           </div>
         </div>
       </section>

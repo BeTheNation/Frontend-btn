@@ -115,8 +115,8 @@ export function CountryPositionsList({
 
   if (!hasPositions) {
     return (
-      <div className="h-full flex items-center justify-center min-h-[200px]">
-        <p className="text-gray-500">No active positions</p>
+      <div className="self-stretch flex-1 flex justify-center items-center min-h-[200px]">
+        <div className="text-[#676767] text-lg font-medium font-['Inter'] leading-7">No active positions</div>
       </div>
     );
   }
@@ -145,67 +145,70 @@ export function CountryPositionsList({
       : "";
 
   return (
-    <div>
-      {/* Abstract Summary (only shown if there are multiple positions) */}
-      {openPositions.length > 1 && (
-        <div className="border-t border-[#222222] pt-3 flex items-center gap-2 mb-3">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-          <div className="text-gray-400">Abstract</div>
-          <div
-            className={`ml-auto ${
-              isPnlPositive ? "text-green-500" : "text-red-500"
-            }`}
-          >
-            {isPnlPositive ? "+" : "-"}
-            {formattedTotalPnL} {formattedPnlPercentage}
+    <div className="self-stretch flex-1 flex flex-col justify-start items-start">
+      <div className="self-stretch h-px relative">
+        <div className="w-[449px] h-px left-0 top-0 absolute bg-[#323232]" />
+      </div>
+      {openPositions.map((position) => (
+        <div key={position.id}>
+          <div className="self-stretch py-4 inline-flex justify-between items-center">
+            <div className="w-[71px] flex justify-between items-center">
+              <div className="w-4 h-[15px] bg-[#155dee] rounded-[100px]" />
+              <div className="justify-start text-[#697485] text-sm font-medium font-['Inter'] leading-tight">{position.country.name}</div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className={`justify-start text-sm font-normal font-['Inter'] leading-tight ${position.unrealizedPnL >= 0 ? 'text-[#16b264]' : 'text-[#b21616]'}`}>
+                {position.unrealizedPnL >= 0 ? '+' : '-'}${Math.abs(position.unrealizedPnL).toFixed(2)} ({((position.unrealizedPnL / position.size) * 100).toFixed(1)}%)
+              </div>
+              <div 
+                className="w-[116px] h-10 px-[10.75px] py-1 rounded-[67.21px] shadow-[0px_0.6720554232597351px_1.3441108465194702px_0px_rgba(0,0,0,0.12)] outline outline-1 outline-offset-[-1px] outline-[#155dee] flex justify-center items-center gap-[2.69px] cursor-pointer"
+                onClick={() => handleClosePosition(position.id)}
+              >
+                <div className="text-center justify-center text-[#155dee] text-base font-semibold font-['Inter'] leading-none">Close</div>
+              </div>
+            </div>
+          </div>
+          <div className="self-stretch py-3.5 inline-flex justify-between items-center">
+            <div className="w-[101px] flex justify-between items-center">
+              <div className="justify-start text-[#697485] text-sm font-medium font-['Inter'] leading-tight">Position Size</div>
+            </div>
+            <div className="justify-start text-[#697586] text-sm font-normal font-['Inter'] leading-tight">${position.size.toFixed(2)}</div>
+          </div>
+          <div className="self-stretch py-3.5 inline-flex justify-between items-center">
+            <div className="w-[101px] flex justify-between items-center">
+              <div className="justify-start text-[#697485] text-sm font-medium font-['Inter'] leading-tight">Entry Price</div>
+            </div>
+            <div className="justify-start text-[#697586] text-sm font-normal font-['Inter'] leading-tight">{position.entryPrice.toFixed(2)}M</div>
+          </div>
+          <div className="self-stretch py-3.5 inline-flex justify-between items-center">
+            <div className="w-[101px] flex justify-between items-center">
+              <div className="justify-start text-[#697485] text-sm font-medium font-['Inter'] leading-tight">Liquidation Price</div>
+            </div>
+            <div className="justify-start text-[#697586] text-sm font-normal font-['Inter'] leading-tight">{position.liquidationPrice.toFixed(2)}M</div>
+          </div>
+          <div className="self-stretch py-3.5 inline-flex justify-between items-center">
+            <div className="w-[101px] flex justify-between items-center">
+              <div className="justify-start text-[#697485] text-sm font-medium font-['Inter'] leading-tight">Fees</div>
+            </div>
+            <div className="justify-start text-[#697586] text-sm font-normal font-['Inter'] leading-tight">${(position.size * 0.005).toFixed(2)}</div>
           </div>
         </div>
-      )}
-
-      {/* List of open positions */}
-      {openPositions.length > 0 && (
-        <div className="space-y-4 mb-4">
-          {openPositions.map((position) => (
-            <CountryPositionItem
-              key={position.id}
-              position={position}
-              onClose={() => handleClosePosition(position.id)}
-              showCloseButton={!positionsLoading}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* List of closing positions */}
-      {closingPositions.length > 0 && (
-        <div className="space-y-4 mb-4">
-          <h3 className="text-sm font-medium text-gray-400 mb-2">
-            Positions Being Closed
-          </h3>
-          {closingPositions.map((position) => (
-            <CountryPositionItem
-              key={position.id}
-              position={position}
-              showCloseButton={false}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* List of closed positions */}
-      {closedPositions.length > 0 && (
-        <div className="space-y-4 mt-6">
-          <h3 className="text-sm font-medium text-gray-400 mb-2">
-            Recently Closed
-          </h3>
-          {closedPositions.map((position) => (
-            <CountryPositionItem
-              key={position.id}
-              position={position}
-              showCloseButton={false}
-            />
-          ))}
-        </div>
+      ))}
+      {openPositions.length > 1 && (
+        <>
+          <div className="self-stretch h-px relative">
+            <div className="w-[449px] h-px left-0 top-0 absolute bg-[#323232]" />
+          </div>
+          <div className="self-stretch py-4 inline-flex justify-between items-center">
+            <div className="w-[101px] flex justify-between items-center">
+              <div className="w-4 h-[15px] bg-[#155dee] rounded-[100px]" />
+              <div className="justify-start text-[#697485] text-sm font-medium font-['Inter'] leading-tight">Abstract</div>
+            </div>
+            <div className={`justify-start text-sm font-normal font-['Inter'] leading-tight ${totalPnL >= 0 ? 'text-[#16b264]' : 'text-[#b21616]'}`}>
+              {totalPnL >= 0 ? '+' : '-'}${Math.abs(totalPnL).toFixed(2)} ({((totalPnL / activePositionsTotal) * 100).toFixed(1)}%)
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
