@@ -15,12 +15,13 @@ import { useContract } from "@/hooks/useContract";
 import { useToast } from "@/components/ui/use-toast";
 import { usePositionCreation } from "@/hooks/usePositionCreation";
 import { USDCApproval } from "@/components/ui/usdc-approval";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Sample country data - in a real app, this would come from an API
 const countryData = {
   usa: {
     name: "USA",
-    flagCode: "🇺🇸",
+    flagCode: "us",
     countryScore: 1839,
     volume24h: "$1,500,000",
     indexPrice: "$1,300,000",
@@ -152,293 +153,342 @@ export default function CountryPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 bg-black min-h-screen">
+    <div className="container mx-auto p-6 bg-[#111214] min-h-screen">
       {/* Back to Dashboard button */}
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center px-4 py-2 mb-4 text-gray-400 hover:text-white bg-[#111111] rounded-lg"
-      >
-        <svg
-          className="w-5 h-5 mr-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
+      <Link href="/dashboard" className="block mb-8">
+        <div className="inline-flex justify-start items-center gap-[23px]">
+          <div className="w-[58px] h-[58px] p-[9.67px] bg-[#1d1f22] rounded-[9.67px] flex justify-center items-center">
+            <svg width="24.72" height="42.9" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="scale-[1.2]">
+              <path fillRule="evenodd" clipRule="evenodd" d="M14.0274 21.1391C13.7253 20.8369 13.5557 20.4272 13.5557 20C13.5557 19.5728 13.7253 19.1631 14.0274 18.8609L23.1414 9.74689C23.2901 9.59301 23.4678 9.47027 23.6644 9.38584C23.861 9.3014 24.0724 9.25696 24.2863 9.2551C24.5002 9.25324 24.7124 9.294 24.9104 9.37501C25.1084 9.45602 25.2882 9.57565 25.4395 9.72692C25.5908 9.87819 25.7104 10.0581 25.7914 10.2561C25.8724 10.4541 25.9132 10.6662 25.9113 10.8801C25.9095 11.0941 25.865 11.3055 25.7806 11.502C25.6962 11.6986 25.5734 11.8764 25.4195 12.025L17.4445 20L25.4195 27.975C25.713 28.2789 25.8754 28.6858 25.8717 29.1083C25.8681 29.5307 25.6986 29.9348 25.3999 30.2335C25.1012 30.5322 24.6971 30.7016 24.2747 30.7053C23.8523 30.709 23.4453 30.5466 23.1414 30.2531L14.0274 21.1391Z" fill="white"/>
         </svg>
-        Back To Dashboard
+          </div>
+          <div className="text-right justify-start text-[#d6d6d6] text-xl font-medium font-['Inter'] leading-tight">Back To Dashboard</div>
+        </div>
       </Link>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Header Panel */}
-        <div className="bg-[#111111] rounded-xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-              <div className="text-4xl">{country.flagCode}</div>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">{country.name}</h2>
-              <p className="text-[#1EFA10] font-medium text-lg">
-                {country.countryScore}
-              </p>
+        <div className="flex items-center justify-between gap-6 px-9 py-[18.86px] bg-[#1d1f22] rounded-xl shadow-[0px_0.7857142686843872px_1.5714285373687744px_0px_rgba(16,24,40,0.06)] shadow-[0px_0.7857142686843872px_2.357142925262451px_0px_rgba(16,24,40,0.10)] outline outline-[0.79px] outline-offset-[-0.79px] outline-[#323232] transition-all duration-200 hover:shadow-lg">
+          {/* Flag Section */}
+          <div className="flex-shrink-0 w-[62.29px] h-[62.29px] relative">
+            <div className="absolute inset-0 rounded-full overflow-hidden bg-[#d7d7d7]">
+              <Image
+                src={`https://flagcdn.com/w160/${country.flagCode.toLowerCase()}.png`}
+                alt={`${country.name} flag`}
+                width={80}
+                height={80}
+                className="w-full h-full object-cover scale-110"
+                priority
+              />
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="text-center">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-black text-xs font-bold">$</span>
+          {/* Country Info Section */}
+          <div className="flex flex-col gap-[13px] flex-grow">
+            <div className="text-white text-[25.14px] font-medium font-['Inter'] leading-snug">{country.name}</div>
+            <div className="text-[#70e000] text-xl font-medium font-['Inter'] leading-snug">{country.countryScore}</div>
+          </div>
+
+          {/* Stats Section */}
+          <div className="flex flex-1 justify-end gap-8">
+            {/* Open Trades */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#ffe5664D] rounded-[100px] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6.00004 14.6666H10C13.3334 14.6666 14.6667 13.3333 14.6667 9.99992V5.99992C14.6667 2.66659 13.3334 1.33325 10 1.33325H6.00004C2.66671 1.33325 1.33337 2.66659 1.33337 5.99992V9.99992C1.33337 13.3333 2.66671 14.6666 6.00004 14.6666Z" stroke="#ffa200" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M4.88666 9.66683L6.47332 7.72016C6.70666 7.4335 7.13332 7.38683 7.42666 7.62016L8.63332 8.62016C8.92666 8.8535 9.35332 8.80683 9.58666 8.52683L11.1133 6.66683" stroke="#ffa200" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
                 </div>
-                <span className="text-gray-400 text-sm">Open Trades</span>
+              <div className="flex flex-col">
+                <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Open Trades</div>
+                <div className="text-white text-sm font-medium font-['Inter'] leading-tight">{country.openTrades}</div>
               </div>
-              <p className="text-white font-medium">{country.openTrades}</p>
             </div>
 
-            <div className="text-center">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-black text-xs font-bold">V</span>
+            {/* Volumes */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#60b6fb4D] rounded-[100px] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6.66671 14.6667H9.33337C12.6667 14.6667 14 13.3334 14 10V6.66671C14 3.33337 12.6667 2.00004 9.33337 2.00004H6.66671C3.33337 2.00004 2.00004 3.33337 2.00004 6.66671V10C2.00004 13.3334 3.33337 14.6667 6.66671 14.6667Z" stroke="#072ac8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10.5 6.66663H5.5" stroke="#072ac8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10.5 9.33337H5.5" stroke="#072ac8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
                 </div>
-                <span className="text-gray-400 text-sm">Volumes</span>
+              <div className="flex flex-col">
+                <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Volumes</div>
+                <div className="text-white text-sm font-medium font-['Inter'] leading-tight">{country.volumes}</div>
               </div>
-              <p className="text-white font-medium">{country.volumes}</p>
             </div>
 
-            <div className="text-center">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-black text-xs font-bold">%</span>
-                </div>
-                <span className="text-gray-400 text-sm">Funding/Cooldown</span>
+            {/* Funding/Cooldown */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#ff45454D] rounded-[100px] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14.6667 8C14.6667 11.68 11.68 14.6667 8 14.6667C4.32 14.6667 1.33333 11.68 1.33333 8C1.33333 4.32 4.32 1.33333 8 1.33333C11.68 1.33333 14.6667 4.32 14.6667 8Z" stroke="#ff4545" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8 5.33333V8.66666" stroke="#ff4545" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M7.99667 10.6667H8.00267" stroke="#ff4545" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
-              <p className="text-[#1EFA10] font-medium">
-                {country.fundingPercent} {country.fundingCooldown}
-              </p>
+              <div className="flex flex-col">
+                <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Funding/Cooldown</div>
+                <div>
+                  <span className="text-[#16b264] text-sm font-medium font-['Inter'] leading-tight">{country.fundingPercent} </span>
+                  <span className="text-white text-sm font-medium font-['Inter'] leading-tight">{country.fundingCooldown}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Chart Panel */}
-          <div className="md:col-span-2 bg-[#111111] rounded-xl p-4">
-            <div className="flex justify-between mb-4">
-              <h3 className="text-gray-300 text-sm">Live Countryscore</h3>
-              <span className="text-[#1EFA10] font-medium">
-                {country.countryScore}
-              </span>
+          <div className="md:col-span-2 w-full h-[520px] p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 overflow-hidden transition-all duration-200 hover:shadow-lg">
+            <div className="self-stretch inline-flex justify-between items-center">
+              <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">Live Countryscore</div>
+              <div className="justify-start text-[#70e000] text-xl font-medium font-['Inter'] leading-snug">{country.countryScore}</div>
             </div>
-
-            <div className="h-64 w-full">
-              {/* Replace with actual chart component */}
-              <svg viewBox="0 0 500 200" className="w-full h-full">
+            <div className="self-stretch flex-1 inline-flex justify-start items-start">
+              <div className="flex-1 self-stretch relative">
+                <div className="w-full h-[424px] left-0 top-0 absolute inline-flex flex-col justify-start items-start gap-2">
+                  <div className="self-stretch flex-1 flex flex-col justify-between items-center">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="self-stretch h-0 relative">
+                        <div className="w-full h-0 left-0 top-0 absolute outline outline-[0.50px] outline-offset-[-0.25px] outline-[#323232]"></div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Line Chart SVG */}
+                  <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                    {/* Gradient definition */}
+                    <defs>
+                      <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#70E000" stopOpacity="0.2" />
+                        <stop offset="100%" stopColor="#70E000" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Area under the line */}
                 <path
-                  d="M0,200 L20,180 C40,160 60,140 80,150 C100,160 120,170 140,150 C160,130 180,110 200,115 C220,120 240,125 260,100 C280,75 300,50 320,75 C340,100 360,125 380,100 C400,75 420,50 440,30 C460,10 480,0 500,0"
-                  fill="none"
-                  stroke="#1EFA10"
-                  strokeWidth="3"
+                      d="M40,280 L100,200 L160,240 L220,180 L280,220 L340,160 L400,190 L460,150 L520,180 L580,140 L640,170 L700,130 L760,150 L760,350 L40,350 Z"
+                      fill="url(#greenGradient)"
                 />
+                    
+                    {/* Main line */}
                 <path
-                  d="M0,200 L20,180 C40,160 60,140 80,150 C100,160 120,170 140,150 C160,130 180,110 200,115 C220,120 240,125 260,100 C280,75 300,50 320,75 C340,100 360,125 380,100 C400,75 420,50 440,30 C460,10 480,0 500,0 L500,200 L0,200"
-                  fill="url(#greenGradient)"
-                  fillOpacity="0.3"
-                />
-                <defs>
-                  <linearGradient
-                    id="greenGradient"
-                    x1="0%"
-                    y1="0%"
-                    x2="0%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor="#1EFA10" stopOpacity="0.7" />
-                    <stop offset="30%" stopColor="#1EFA10" stopOpacity="0.4" />
-                    <stop
-                      offset="100%"
-                      stopColor="#1EFA10"
-                      stopOpacity="0.05"
+                      d="M40,280 L100,200 L160,240 L220,180 L280,220 L340,160 L400,190 L460,150 L520,180 L580,140 L640,170 L700,130 L760,150"
+                      stroke="#70E000"
+                      strokeWidth="2"
+                      fill="none"
                     />
-                  </linearGradient>
-                </defs>
+                    
+                    {/* Data points */}
+                    {[
+                      [40,280], [100,200], [160,240], [220,180], [280,220],
+                      [340,160], [400,190], [460,150], [520,180], [580,140],
+                      [640,170], [700,130], [760,150]
+                    ].map(([x, y], i) => (
+                      <circle
+                        key={i}
+                        cx={x}
+                        cy={y}
+                        r="4"
+                        fill="#70E000"
+                    />
+                    ))}
               </svg>
-            </div>
 
-            <div className="flex justify-between mt-2 text-xs text-gray-500">
-              <span>00:10</span>
-              <span>02:00</span>
-              <span>04:00</span>
-              <span>06:00</span>
-              <span>08:00</span>
-              <span>10:00</span>
-              <span>12:00</span>
+                  <div className="self-stretch px-6 inline-flex justify-between items-center">
+                    {['28 April', '29 April', '30 April', '1 May', '2 May', '3 May', '4 May', '5 May', '6 May', '7 May', '8 May', '9 May'].map((date) => (
+                      <div key={date} className="justify-start text-[#697485] text-xs font-normal font-['Inter'] leading-[18px]">{date}</div>
+                    ))}
+                  </div>
+                </div>
+                <div className="w-full h-[398px] px-5 left-0 top-0 absolute inline-flex justify-between items-end">
+                  {[...Array(13)].map((_, i) => (
+                    <div key={i} className="w-8 self-stretch relative">
+                      {i === 0 && <div className="w-8 h-[420px] left-0 top-[29px] absolute" />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="w-[47px] self-stretch flex justify-between items-start">
+                <div className="w-[398px] h-0 origin-top-left rotate-90 outline outline-1 outline-offset-[-0.50px] outline-[#323232]"></div>
+                <div className="w-[30px] self-stretch inline-flex flex-col justify-start items-start gap-[27px]">
+                  {['2500', '2300', '2000', '1800', '1600', '1400', '1200', '1100', '900'].map((value) => (
+                    <div key={value} className="self-stretch justify-start text-[#697485] text-xs font-normal font-['Inter'] leading-[18px]">{value}</div>
+                  ))}
+                </div>
+            </div>
             </div>
           </div>
 
           {/* Trading Panel */}
-          <div className="bg-[#111111] rounded-xl p-4">
-            <div className="bg-[#1A1A1A] rounded-full flex mb-4">
-              <button
-                className={`flex-1 py-3 px-6 rounded-full flex items-center justify-center ${
-                  direction === "long"
-                    ? "bg-[#00E084] text-white"
-                    : "text-gray-400"
+          <div className="self-stretch p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-6 transition-all duration-200 hover:shadow-lg">
+            <div className="self-stretch px-2.5 py-2 bg-[#2d2d2e] rounded-[100px] flex">
+              <div className="self-stretch h-[61px] flex-1 flex items-center relative">
+                <div 
+                  className={`absolute inset-0 transition-all duration-300 ease-in-out flex ${
+                    direction === "long" ? "justify-start" : "justify-end"
+                  }`}
+                >
+                  <div className={`h-full w-1/2 ${
+                    direction === "long" ? "bg-[#16b264]" : "bg-[#FF4B4B]"
+                  } rounded-[100px] shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)]`} />
+                </div>
+                <div 
+                  className={`flex-1 z-10 px-[18.86px] py-[15px] flex justify-center items-center gap-[18.86px] cursor-pointer transition-colors duration-300 ${
+                    direction === "long" ? "text-white" : "text-[#545454]"
                 }`}
                 onClick={() => setDirection("long")}
               >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 11l5-5 5 5"
-                  />
+                  <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                      <path fillRule="evenodd" d="M12 20.25a.75.75 0 01-.75-.75V6.31l-5.47 5.47a.75.75 0 01-1.06-1.06l6.75-6.75a.75.75 0 011.06 0l6.75 6.75a.75.75 0 11-1.06 1.06l-5.47-5.47V19.5a.75.75 0 01-.75.75z" clipRule="evenodd" />
                 </svg>
-                Long
-              </button>
-              <button
-                className={`flex-1 py-3 px-6 rounded-full flex items-center justify-center ${
-                  direction === "short"
-                    ? "bg-[#FF4B4B] text-white"
-                    : "text-gray-400"
+                    <span className="text-xl font-medium font-['Inter'] leading-snug">Long</span>
+                  </div>
+                </div>
+                <div 
+                  className={`flex-1 z-10 px-[18.86px] py-[15px] flex justify-center items-center gap-[18.86px] cursor-pointer transition-colors duration-300 ${
+                    direction === "short" ? "text-white" : "text-[#545454]"
                 }`}
                 onClick={() => setDirection("short")}
               >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 13l5 5 5-5"
-                  />
+                  <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                      <path fillRule="evenodd" d="M12 3.75a.75.75 0 01.75.75v13.19l5.47-5.47a.75.75 0 111.06 1.06l-6.75 6.75a.75.75 0 01-1.06 0l-6.75-6.75a.75.75 0 111.06-1.06l5.47 5.47V4.5a.75.75 0 01.75-.75z" clipRule="evenodd" />
                 </svg>
-                Short
-              </button>
+                    <span className="text-xl font-medium font-['Inter'] leading-snug">Short</span>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            <h3 className="text-white font-medium mb-2">Market</h3>
-            <div className="flex justify-between mb-4">
-              <span className="text-gray-400">
-                Balance :{" "}
-                {isConnected && balance ? `$${formattedBalance}` : "$0.00"}
+            <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-2.5">
+              <div className="self-stretch flex-1 bg-[#1d1f22] rounded shadow-[0px_0.7857142686843872px_1.5714285373687744px_0px_rgba(16,24,40,0.06)] shadow-[0px_0.7857142686843872px_2.357142925262451px_0px_rgba(16,24,40,0.10)] flex flex-col justify-between items-start">
+                <div className="self-stretch flex flex-col justify-start items-start gap-[18px]">
+                  <div className="self-stretch inline-flex justify-start items-center gap-[12.57px]">
+                    <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-snug">Market</div>
+                  </div>
+                  <div className="self-stretch inline-flex justify-start items-start gap-[19px]">
+                    <div className="flex-1 flex justify-start items-center gap-[12.57px]">
+                      <div className="flex-1 justify-start">
+                        <span className="text-[#666666] text-base font-medium font-['Inter'] leading-snug">Balance : </span>
+                        <span className="text-white text-base font-medium font-['Inter'] leading-snug">
+                          ${isConnected && balance ? formattedBalance : "0.00"}
               </span>
-              <button className="text-blue-400 text-sm">Deposit Funds</button>
+                      </div>
+                    </div>
+                    <div className="flex justify-start items-center gap-[12.57px]">
+                      <div className="justify-start text-[#666666] text-base font-medium font-['Inter'] leading-snug cursor-pointer">
+                        Deposit Funds
+                      </div>
+                    </div>
+                  </div>
             </div>
-
-            <div className="bg-[#1A1A1A] rounded-md p-3 flex justify-between items-center mb-4">
-              <span className="text-gray-400">Amount</span>
-              <div className="flex items-center gap-2">
+                <div className="self-stretch h-[63px] px-[22px] py-1.5 bg-[#2d2e2e] rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] inline-flex justify-end items-center gap-1">
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) =>
-                    setAmount(Math.max(0, parseFloat(e.target.value) || 0))
-                  }
-                  className={`bg-transparent text-right w-24 outline-none ${
-                    isAmountValid ? "text-white" : "text-red-500"
+                    onChange={(e) => setAmount(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className={`flex-1 bg-transparent text-left outline-none border-none ${
+                      isAmountValid ? "text-white" : "text-red-500"
+                    } text-xl font-bold font-['Inter'] leading-tight`}
+                  />
+                  <div className="text-[#d6d6d6] text-xl font-bold font-['Inter'] leading-tight">nUSDC</div>
+                </div>
+                <div className="self-stretch py-6 relative inline-flex justify-start items-center gap-3">
+                  <div className="flex-1 h-1 bg-[#2d2e2e] rounded-full relative">
+                    <div 
+                      className="absolute h-full bg-gradient-to-r from-[#155dee] to-[#45b3ff] rounded-full transition-all duration-200"
+                      style={{ width: `${((leverage - 1) / 4) * 100}%` }}
+                    />
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      step="1"
+                      value={leverage}
+                      onChange={(e) => setLeverage(parseInt(e.target.value))}
+                      className="absolute inset-0 w-full opacity-0 cursor-pointer z-20"
+                    />
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <div
+                        key={value}
+                        className="absolute top-1/2 -translate-y-1/2 -ml-1 z-10"
+                        style={{ left: `${((value - 1) / 4) * 100}%` }}
+                      >
+                        <div 
+                          className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                            value <= leverage 
+                              ? 'bg-white shadow-[0_0_8px_rgba(21,93,238,0.5)]' 
+                              : 'bg-[#404040]'
                   }`}
                 />
-                <span className="text-white">nUSDC</span>
+                      </div>
+                    ))}
+                    <div 
+                      className="absolute -top-3 -ml-3 z-10 transition-all duration-200"
+                      style={{ left: `${((leverage - 1) / 4) * 100}%` }}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#155dee] to-[#45b3ff] shadow-[0_0_10px_rgba(21,93,238,0.5)] flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full" />
+                      </div>
               </div>
             </div>
-            <div className="mb-4">
-              <Slider
-                defaultValue={[leverage]}
-                max={5}
-                step={1}
-                onValueChange={(vals) => setLeverage(vals[0])}
-                className="mt-2"
-              />
-              <div className="flex justify-end mt-1">
-                <span className="text-gray-400 text-sm">x{leverage}</span>
+                  <div className="w-12 flex justify-center items-center">
+                    <div className="text-center text-[#717171] text-xl font-medium font-['Inter'] leading-normal bg-[#2d2e2e] px-3 py-1 rounded-full">
+                      x{leverage}
               </div>
             </div>
-
-            <div className="flex justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="black"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="8" />
-                    <line x1="12" y1="8" x2="12" y2="16" />
-                    <line x1="8" y1="12" x2="16" y2="12" />
-                  </svg>
                 </div>
-                <div className="text-xs">
-                  <div className="text-gray-400">Size = Entry Price</div>
-                  <div className="text-white">
+                <div className="self-stretch inline-flex justify-center items-center">
+                  <div className="w-56 py-4 flex justify-center items-center gap-8">
+                    <div className="w-[202px] flex justify-center items-center gap-3">
+                      <div className="w-8 h-8 bg-white rounded-[100px] flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[#16b2644D] rounded-[100px] flex items-center justify-center">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 14.6667C11.68 14.6667 14.6667 11.68 14.6667 8C14.6667 4.32 11.68 1.33333 8 1.33333C4.32 1.33333 1.33333 4.32 1.33333 8C1.33333 11.68 4.32 14.6667 8 14.6667Z" stroke="#16b264" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M5.33333 8L7.33333 10L10.6667 6.66667" stroke="#16b264" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="w-[181px] inline-flex flex-col justify-start items-start">
+                        <div className="self-stretch justify-start text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Size - Entry Price</div>
+                        <div className="self-stretch justify-start text-white text-sm font-medium font-['Inter'] leading-tight">
                     ${positionSize} at {country.markPrice}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="black"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="8" />
-                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </div>
+                  <div className="w-[132px] py-4 flex justify-start items-center gap-8">
+                    <div className="flex-1 flex justify-start items-center gap-3">
+                      <div className="w-8 h-8 bg-white rounded-[100px] flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path fillRule="evenodd" d="M3.75 12a.75.75 0 01.75-.75h15a.75.75 0 010 1.5h-15a.75.75 0 01-.75-.75z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <div className="text-xs">
-                  <div className="text-gray-400">Liquidated at</div>
-                  <div className="text-white">{country.liquidationPrice}</div>
+                      <div className="flex-1 inline-flex flex-col justify-start items-start">
+                        <div className="self-stretch justify-start text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Liquidated at</div>
+                        <div className="self-stretch justify-start text-white text-sm font-medium font-['Inter'] leading-tight">{country.liquidationPrice}</div>
                 </div>
               </div>
             </div>
-
-            {/* Add USDC Approval UI when needed */}
-            {needsUSDCApproval && (
-              <div className="mb-4 bg-[#1A1A1A] rounded-lg border border-[#333333]">
-                <USDCApproval
-                  amount={amount.toString()}
-                  onSuccess={handleApprovalSuccess}
-                />
               </div>
-            )}
-
             <button
-              className={`w-full py-3 rounded-md font-medium shadow-lg transition-colors ${
-                isConnected &&
-                isAmountValid &&
-                !isProcessing &&
-                !needsUSDCApproval
-                  ? "bg-[#1a7cff] text-white hover:bg-blue-500"
-                  : "bg-gray-600 text-gray-300 cursor-not-allowed"
+                  className={`self-stretch h-[60px] px-4 py-2 ${
+                    isConnected && isAmountValid && !isProcessing && !needsUSDCApproval
+                      ? "bg-[#155dee]"
+                      : "bg-gray-600"
+                  } rounded-[100px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.12)] inline-flex justify-center items-center gap-1 ${
+                    !isConnected || !isAmountValid || isProcessing || needsUSDCApproval
+                      ? "cursor-not-allowed"
+                      : ""
               }`}
-              disabled={
-                !isConnected ||
-                !isAmountValid ||
-                isProcessing ||
-                needsUSDCApproval
-              }
+                  disabled={!isConnected || !isAmountValid || isProcessing || needsUSDCApproval}
               onClick={handlePlaceTrade}
             >
+                  <div className="text-center justify-center text-white text-xl font-medium font-['Inter'] leading-normal">
               {!isConnected
                 ? "Connect Wallet to Trade"
                 : !isAmountValid
@@ -448,168 +498,103 @@ export default function CountryPage() {
                 : needsUSDCApproval
                 ? "Approve USDC First"
                 : "Place Trade"}
+                  </div>
             </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Bottom Panels */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* About Panel */}
-          <div className="bg-[#111111] rounded-xl p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white font-medium">About</h3>
-              <button className="text-gray-500">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
+          <div className="self-stretch p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 transition-all duration-200 hover:shadow-lg">
+            <div className="self-stretch inline-flex justify-start items-center gap-4">
+              <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">About</div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-[#99a3b2]">
+                <path fillRule="evenodd" d="M12 6a2 2 0 11-4 0 2 2 0 014 0zM12 12a2 2 0 11-4 0 2 2 0 014 0zM12 18a2 2 0 11-4 0 2 2 0 014 0z" clipRule="evenodd" />
                 </svg>
-              </button>
             </div>
-            <p className="text-gray-500 text-sm leading-relaxed">
+            <div className="self-stretch inline-flex justify-start items-center gap-4">
+              <div className="flex-1 justify-start text-[#676767] text-lg font-medium font-['Inter'] leading-7">
               {country.description}
-            </p>
+              </div>
+            </div>
           </div>
 
           {/* Leaderboard Panel */}
-          <div className="bg-[#111111] rounded-xl p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white font-medium">Leaderboard</h3>
-              <button className="text-gray-500">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
+          <div className="self-stretch h-[407px] p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 transition-all duration-200 hover:shadow-lg">
+            <div className="self-stretch inline-flex justify-start items-center gap-4">
+              <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">Leaderboard</div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-[#99a3b2]">
+                <path fillRule="evenodd" d="M12 6a2 2 0 11-4 0 2 2 0 014 0zM12 12a2 2 0 11-4 0 2 2 0 014 0zM12 18a2 2 0 11-4 0 2 2 0 014 0z" clipRule="evenodd" />
                 </svg>
-              </button>
             </div>
-
-            <p className="text-gray-500 mb-4 border-b border-[#222222] pb-3">
-              You are ranked 167th in Indonesia
-            </p>
-
-            <div className="space-y-0">
-              {/* User 1 */}
-              <div className="py-3 border-b border-[#222222]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-500 text-sm w-14">Rank #1</span>
-                    <div className="w-6 h-6 rounded-full overflow-hidden">
-                      <Image
-                        src="/sarah.jpg"
-                        alt="Profile 1"
-                        width={24}
-                        height={24}
-                        className="w-full h-full object-cover"
-                      />
+            <div className="self-stretch inline-flex justify-start items-center gap-4">
+              <div className="flex-1 justify-start text-[#676767] text-lg font-medium font-['Inter'] leading-7">You are ranked 167th in Indonesia</div>
+            </div>
+            <div className="self-stretch flex-1 flex flex-col justify-start items-start">
+              <div className="self-stretch h-px relative">
+                <div className="w-[399px] h-px left-0 top-0 absolute bg-[#323232]" />
                     </div>
-                    <span className="text-white text-sm">0xMeilline</span>
+              <div className="self-stretch h-px relative" />
+              <div className="self-stretch py-4 inline-flex justify-between items-center">
+                <div className="w-[244px] flex justify-between items-center">
+                  <div className="justify-start text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Rank #1</div>
+                  <div className="flex justify-start items-center gap-3">
+                    <Image className="w-[33px] h-8 rounded-[100px]" src="/sarah.jpg" alt="Profile 1" width={33} height={32} />
+                    <div className="justify-start text-white text-sm font-medium font-['Inter'] leading-tight">0xMeiline</div>
                   </div>
-                  <span className="text-[#1EFA10]">$250,000</span>
                 </div>
+                <div className="justify-start text-[#16b264] text-sm font-normal font-['Inter'] leading-tight">$250,000</div>
               </div>
-
-              {/* User 2 */}
-              <div className="py-3 border-b border-[#222222]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-500 text-sm w-14">Rank #2</span>
-                    <div className="w-6 h-6 rounded-full overflow-hidden">
-                      <Image
-                        src="/john.jpg"
-                        alt="Profile 2"
-                        width={24}
-                        height={24}
-                        className="w-full h-full object-cover"
-                      />
+              <div className="self-stretch h-px bg-[#323232]" />
+              <div className="self-stretch py-4 inline-flex justify-between items-center">
+                <div className="w-[231px] flex justify-between items-center">
+                  <div className="justify-start text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Rank #2</div>
+                  <div className="flex justify-start items-center gap-3">
+                    <Image className="w-[33px] h-8 rounded-[100px]" src="/john.jpg" alt="Profile 2" width={33} height={32} />
+                    <div className="justify-start text-white text-sm font-medium font-['Inter'] leading-tight">0xClara</div>
+                  </div>
+                </div>
+                <div className="justify-start text-[#16b264] text-sm font-normal font-['Inter'] leading-tight">$12,000</div>
+              </div>
+              <div className="self-stretch h-px relative">
+                <div className="w-[399px] h-px left-0 top-0 absolute bg-[#323232]" />
                     </div>
-                    <span className="text-white text-sm">0xClara</span>
+              <div className="self-stretch py-4 inline-flex justify-between items-center">
+                <div className="w-[247px] flex justify-between items-center">
+                  <div className="justify-start text-[#697485] text-sm font-normal font-['Inter'] leading-tight">Rank #3</div>
+                  <div className="flex justify-start items-center gap-3">
+                    <Image className="w-[33px] h-8 rounded-[100px]" src="/david.jpg" alt="Profile 3" width={33} height={32} />
+                    <div className="justify-start text-white text-sm font-medium font-['Inter'] leading-tight">0xEdward</div>
                   </div>
-                  <span className="text-[#1EFA10]">$12,000</span>
                 </div>
+                <div className="justify-start text-[#16b264] text-sm font-normal font-['Inter'] leading-tight">$10,000</div>
               </div>
-
-              {/* User 3 */}
-              <div className="py-3 border-b border-[#222222]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-500 text-sm w-14">Rank #3</span>
-                    <div className="w-6 h-6 rounded-full overflow-hidden">
-                      <Image
-                        src="/david.jpg"
-                        alt="Profile 3"
-                        width={24}
-                        height={24}
-                        className="w-full h-full object-cover"
-                      />
+              <div className="self-stretch h-px relative">
+                <div className="w-[399px] h-px left-0 top-0 absolute bg-[#323232]" />
                     </div>
-                    <span className="text-white text-sm">0xEdward</span>
+              <div className="self-stretch py-4 inline-flex justify-between items-center">
+                <div className="w-60 flex justify-between items-center">
+                  <div className="justify-start text-white text-sm font-semibold font-['Inter'] leading-tight">Rank #167</div>
+                  <div className="flex justify-start items-center gap-3">
+                    <Image className="w-[33px] h-8 rounded-[100px]" src="/placeholder-user.jpg" alt="Profile 4" width={33} height={32} />
+                    <div className="justify-start text-white text-sm font-medium font-['Inter'] leading-tight">0xCeline</div>
                   </div>
-                  <span className="text-[#1EFA10]">$10,000</span>
                 </div>
+                <div className="justify-start text-[#16b264] text-sm font-normal font-['Inter'] leading-tight">$1,000</div>
               </div>
-
-              {/* User 167 */}
-              <div className="pt-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-500 text-sm w-14">
-                      Rank #167
-                    </span>
-                    <div className="w-6 h-6 rounded-full overflow-hidden">
-                      <Image
-                        src="/placeholder-user.jpg"
-                        alt="Profile 4"
-                        width={24}
-                        height={24}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <span className="text-white text-sm">0xCeline</span>
-                  </div>
-                  <span className="text-[#1EFA10]">$1,000</span>
-                </div>
-              </div>
+              <div className="self-stretch h-px relative" />
+              <div className="self-stretch h-px relative" />
             </div>
           </div>
 
           {/* Positions Panel */}
-          <div className="bg-[#111111] rounded-xl p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white font-medium">Positions</h3>
-              <button className="text-gray-500">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </button>
+          <div className="self-stretch p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5">
+            <div className="self-stretch inline-flex justify-start items-center gap-4">
+              <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">Positions</div>
             </div>
-
             <CountryPositionsList
               countryId={countryId}
               currentPrice={currentPrice}

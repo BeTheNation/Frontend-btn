@@ -7,102 +7,8 @@ import { Address } from "@/types/abitype";
 import { ContractPosition, Position, TPSLConfig } from "./types";
 import { handleContractFunctionExecutionError } from "@/lib/viem-error-decoder";
 import { toast } from "@/components/ui/use-toast";
-
-// Use the actual contract ABI from PredictionMarket.json
-export const PREDICTION_MARKET_ABI = [
-  {
-    inputs: [
-      { internalType: "string", name: "countryId", type: "string" },
-      {
-        internalType: "enum PredictionMarket.PositionDirection",
-        name: "direction",
-        type: "uint8",
-      },
-      { internalType: "uint8", name: "leverage", type: "uint8" },
-      { internalType: "uint256", name: "size", type: "uint256" },
-    ],
-    name: "openPosition",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "sender", type: "address" }],
-    name: "closePosition",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      { internalType: "uint256", name: "takeProfit", type: "uint256" },
-      { internalType: "uint256", name: "stopLoss", type: "uint256" },
-    ],
-    name: "setTPSL",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getPosition",
-    outputs: [
-      {
-        components: [
-          { internalType: "uint256", name: "positionId", type: "uint256" },
-          { internalType: "string", name: "countryId", type: "string" },
-          { internalType: "address", name: "trader", type: "address" },
-          {
-            internalType: "enum PredictionMarket.PositionDirection",
-            name: "direction",
-            type: "uint8",
-          },
-          { internalType: "uint256", name: "size", type: "uint256" },
-          { internalType: "uint8", name: "leverage", type: "uint8" },
-          { internalType: "uint256", name: "entryPrice", type: "uint256" },
-          { internalType: "uint256", name: "openTime", type: "uint256" },
-          { internalType: "uint256", name: "takeProfit", type: "uint256" },
-          { internalType: "uint256", name: "stopLoss", type: "uint256" },
-          { internalType: "bool", name: "isOpen", type: "bool" },
-          {
-            internalType: "uint256",
-            name: "liquidationPrice",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct PredictionMarket.Position",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    // ERC20InsufficientAllowance error definition from OpenZeppelin
-    type: "error",
-    name: "ERC20InsufficientAllowance",
-    inputs: [
-      { name: "spender", type: "address", internalType: "address" },
-      { name: "allowance", type: "uint256", internalType: "uint256" },
-      { name: "needed", type: "uint256", internalType: "uint256" },
-    ],
-  },
-] as const;
-
-// Contract addresses for different networks
-const CONTRACT_ADDRESSES: Record<number, Address> = {
-  // New contract addresses from our Base Sepolia deployment
-  84532: "0x3Bc2f3BD1E74F669C24fF6d4D53A5DFfb6d5B08F", // Base Sepolia testnet - PredictionMarket
-  31337: "0x3Bc2f3BD1E74F669C24fF6d4D53A5DFfb6d5B08F", // Use Base Sepolia for local testing too
-  // Add more networks as needed
-};
-
-// USDC token addresses
-export const USDC_ADDRESSES: Record<number, Address> = {
-  84532: "0x4114d4AEae92Bad30E4cFaE6a85c6db0c3c5dA12", // Base Sepolia testnet - MockUSDC
-  31337: "0x4114d4AEae92Bad30E4cFaE6a85c6db0c3c5dA12", // Use Base Sepolia for local testing too
-};
+import { CONTRACT_ADDRESSES, USDC_ADDRESSES } from "./constants";
+import { PREDICTION_MARKET_ABI } from "./constants";
 
 /**
  * Gets prediction market contract instance for the connected chain
@@ -169,8 +75,6 @@ export const validateContractAddress = (
 
 /**
  * Gets contract address for the specified chain
- * If no chainId is provided (not connected to wallet), use Base Sepolia for demo
- * If address is not valid for current chainId, use Base Sepolia address
  */
 export const getContractAddress = (chainId: number): Address => {
   const address = CONTRACT_ADDRESSES[chainId];
@@ -268,8 +172,8 @@ export const openPosition = async (
   marginAmount: string
 ): Promise<any> => {
   try {
-    // Convert margin amount to Wei
-    const size = parseEther(marginAmount);
+    // Convert margin amount to proper format with 6 decimals for USDC
+    const size = formatMarginAmount(marginAmount);
 
     // Convert direction string to numeric enum value (0 for long, 1 for short)
     const directionValue = direction === "long" ? 0 : 1;
@@ -364,7 +268,21 @@ export const setTPSL = async (
  */
 export const formatMarginAmount = (amount: string): bigint => {
   try {
-    return parseEther(amount);
+    // USDC uses 6 decimals, not 18 like Ether
+    // Instead of parseEther (which uses 18 decimals), we multiply by 10^6
+    const amountFloat = parseFloat(amount);
+    const USDC_DECIMALS = 6; // Explicitly define decimals for clarity
+    const DECIMAL_FACTOR = Math.pow(10, USDC_DECIMALS);
+
+    const amountWithDecimals = amountFloat * DECIMAL_FACTOR; // 10^6 for 6 decimals
+    const result = BigInt(Math.floor(amountWithDecimals));
+
+    // Log for verification
+    console.log(
+      `💰 USDC CONVERSION: ${amount} → ${result} (using ${USDC_DECIMALS} decimals, not 18)`
+    );
+
+    return result;
   } catch (error) {
     console.error("Error formatting margin amount:", error);
     throw error;

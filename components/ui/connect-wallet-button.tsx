@@ -14,11 +14,14 @@ export function ConnectWalletButton() {
   const { isConnected } = useAccount();
   const [wasConnected, setWasConnected] = useState(false);
 
-  // Track connection state changes to detect when a user has just connected
+  // Track connection state changes to detect when a user has just connected or disconnected
   useEffect(() => {
     if (isConnected && !wasConnected) {
       // User just connected their wallet
       router.push("/dashboard");
+    } else if (!isConnected && wasConnected) {
+      // User just disconnected their wallet
+      router.push("/");
     }
     setWasConnected(isConnected);
   }, [isConnected, wasConnected, router]);

@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { parseEther } from "viem";
-import { useContractWrite, useNetwork, useAccount, useContractRead } from "wagmi";
+import {
+  useContractWrite,
+  useNetwork,
+  useAccount,
+  useContractRead,
+} from "wagmi";
 import {
   getContractAddress,
   getUSDCAddress,
+  formatMarginAmount,
 } from "@/lib/contracts/PredictionMarket";
 import { handleContractFunctionExecutionError } from "@/lib/viem-error-decoder";
 import { ethers } from "ethers";
@@ -30,8 +36,8 @@ export function USDCApproval({
   const [currentAllowance, setCurrentAllowance] = useState<bigint>(BigInt(0));
 
   // Get the default contract address if one is not provided
-  const resolvedContractAddress = contractAddress || 
-    (chain?.id ? getContractAddress(chain.id) : undefined);
+  const resolvedContractAddress =
+    contractAddress || (chain?.id ? getContractAddress(chain.id) : undefined);
 
   // Get USDC address
   const usdcAddress = chain?.id ? getUSDCAddress(chain.id) : undefined;
@@ -82,15 +88,24 @@ export function USDCApproval({
 
   const getApprovalAmount = () => {
     try {
-      // Convert the amount to a BigInt
-      const amountBigInt = parseEther(amount);
+      // Use formatMarginAmount for 6 decimals (USDC)
+      const amountBigInt = formatMarginAmount(amount);
       // Add a 20% buffer to the amount
       const buffer = (amountBigInt * BigInt(20)) / BigInt(100);
-      return amountBigInt + buffer;
+      const totalAmount = amountBigInt + buffer;
+
+      console.log("Approval amount details:", {
+        originalAmount: amount,
+        convertedAmount: amountBigInt.toString(),
+        buffer: buffer.toString(),
+        totalApprovalAmount: totalAmount.toString(),
+      });
+
+      return totalAmount;
     } catch (error) {
       console.error("Error calculating approval amount:", error);
-      // Return a default value or the original amount
-      return parseEther(amount);
+      // Return a default value using formatMarginAmount
+      return formatMarginAmount(amount);
     }
   };
 
@@ -104,29 +119,65 @@ export function USDCApproval({
       return;
     }
 
+    // Verify we're on Base Sepolia
+    if (chain?.id !== 84532) {
+      console.warn(
+        "🚨 Wrong network detected! Please switch to Base Sepolia (chainId 84532) to proceed with live transactions."
+      );
+      toast({
+        title: "Network Error",
+        description: "You're on the wrong network. Switch to Base Sepolia!",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Ensure contract address is valid
       if (!ethers.isAddress(resolvedContractAddress)) {
-        throw new Error("Alamat kontrak tidak valid");
+        throw new Error("Invalid contract address");
       }
-      
-      // Log status and data for approval
-      console.log("Memulai approval USDC:", {
+
+      // Enhanced logging for approval process
+      console.log("📊 APPROVAL FLOW - STEP 1: STARTING USDC APPROVAL", {
+        network: chain?.name,
+        chainId: chain?.id,
+        userAddress: address,
+        spender: resolvedContractAddress,
+        usdcAddress,
         amount,
-        contractAddress: resolvedContractAddress,
-        currentAllowance,
+        amountDecimals: "6", // Explicitly log that we're using 6 decimals
+        currentAllowance: currentAllowance.toString(),
       });
-      
+
       // Calculate approval amount with buffer
       const approvalAmount = getApprovalAmount();
+
+      console.log("📊 APPROVAL FLOW - STEP 2: SUBMITTING APPROVAL", {
+        approvalAmount: approvalAmount.toString(),
+        timestamp: new Date().toISOString(),
+      });
+
       const result = await approve({
         args: [resolvedContractAddress, approvalAmount],
       });
-      
-      // Log result
-      console.log("Approval berhasil:", result);
+
+      // Log result with detailed transaction info
+      console.log("📊 APPROVAL FLOW - STEP 3: APPROVAL TRANSACTION SENT", {
+        txHash: result.hash,
+        gasUsed: result.gasUsed?.toString() || "unknown",
+        timestamp: new Date().toISOString(),
+      });
+
       await refetchAllowance();
+
+      console.log("📊 APPROVAL FLOW - STEP 4: NEW ALLOWANCE", {
+        previousAllowance: currentAllowance.toString(),
+        newAllowance: allowanceData ? allowanceData.toString() : "unknown",
+        timestamp: new Date().toISOString(),
+      });
+
       toast({
         title: "Success",
         description: "USDC approval successful",

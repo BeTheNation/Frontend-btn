@@ -49,12 +49,53 @@ export const useDemoModeStore = create<DemoModeStore>()(
   persist(
     (set, get) => ({
       isDemoMode: true, // Default to demo mode for new users
+      manualDemoMode: true, // New field to track user's manual preference
       demoBalance: 5000, // Default demo balance
       demoPositions: initialDemoPositions, // Default demo positions
       demoTradeHistory: [], // Default empty trade history
 
-      // Toggle demo mode
-      toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
+      // Toggle demo mode with improved logic
+      toggleDemoMode: () =>
+        set((state) => {
+          const newManualMode = !state.manualDemoMode;
+          console.log(
+            "🧪 Toggling demo mode. New manual preference:",
+            newManualMode
+          );
+          return {
+            manualDemoMode: newManualMode,
+            isDemoMode: newManualMode,
+          };
+        }),
+
+      // Force demo mode off (for network-based override)
+      forceDisableDemoMode: () => {
+        console.log("🧪 Forcing demo mode OFF due to live network");
+        set({ isDemoMode: false });
+      },
+
+      // Force demo mode to match setting (when not on live network)
+      forceEnableDemoMode: () => {
+        if (get().manualDemoMode) {
+          console.log("🧪 Forcing demo mode ON based on user preference");
+          set({ isDemoMode: true });
+        }
+      },
+
+      // Set actual demo mode state based on network
+      setDemoModeBasedOnNetwork: (chainId?: number) => {
+        console.log("🔍 Checking demo mode for chainId:", chainId);
+        // Force disable demo mode if we're on Base Sepolia (84532)
+        if (chainId === 84532) {
+          console.log("🔄 Setting to LIVE mode - Base Sepolia detected");
+          set({ isDemoMode: false });
+        } else if (get().manualDemoMode) {
+          console.log(
+            "🔄 Setting to DEMO mode - User preference or non-production chain"
+          );
+          set({ isDemoMode: true });
+        }
+      },
 
       // Update demo balance with improved logging
       updateDemoBalance: (amount: number) => {
@@ -225,6 +266,7 @@ export const useDemoModeStore = create<DemoModeStore>()(
         console.log("Resetting demo mode to defaults");
         set({
           isDemoMode: true,
+          manualDemoMode: true,
           demoBalance: 5000,
           demoPositions: initialDemoPositions,
           demoTradeHistory: [],
@@ -259,6 +301,9 @@ export function useDemoMode() {
   return {
     isDemoMode: demoModeStore.isDemoMode,
     toggleDemoMode: demoModeStore.toggleDemoMode,
+    forceDisableDemoMode: demoModeStore.forceDisableDemoMode,
+    forceEnableDemoMode: demoModeStore.forceEnableDemoMode,
+    setDemoModeBasedOnNetwork: demoModeStore.setDemoModeBasedOnNetwork,
     demoPositions: demoModeStore.demoPositions,
     demoBalance: demoModeStore.demoBalance,
     demoTradeHistory: demoModeStore.demoTradeHistory,
