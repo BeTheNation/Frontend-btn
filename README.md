@@ -6,6 +6,11 @@ A decentralized platform for trading and predicting country GDP performance usin
 
 BeTheNation is a crypto-based trading platform allowing users to take long or short positions on different countries' economic performance. The platform features leverage trading, a demo mode for risk-free practice, real-time charts, and comprehensive position management.
 
+## Recent Fixes
+
+- Fixed TypeScript error related to case sensitivity in CountryCard component imports
+- Added forceConsistentCasingInFileNames to TypeScript configuration
+
 ## Technology Stack
 
 - **Frontend**: Next.js, React, TypeScript, Tailwind CSS
