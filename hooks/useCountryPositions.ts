@@ -1,7 +1,7 @@
 "use client";
 
 import { usePositions } from "@/hooks/usePositions";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Position, PositionWithPnL } from "@/types/position";
 import { toast } from "@/components/ui/use-toast";
 
@@ -21,8 +21,18 @@ export interface ExtendedPosition extends PositionWithPnL {
 /**
  * Custom hook to get positions for a specific country with PnL calculations
  */
-export function useCountryPositions(countryId: string, currentPrice: number) {
-  const { positions: allPositions, isLoading } = usePositions();
+export function useCountryPositions(
+  countryId: string,
+  currentPrice: number = 0
+) {
+  const {
+    positions: allPositions,
+    isLoading,
+    refreshPositions,
+  } = usePositions();
+  const [positions, setPositions] = useState<ExtendedPosition[]>([]);
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+
   // Track closed positions separately so they can remain visible
   const [closedPositions, setClosedPositions] = useState<ExtendedPosition[]>(
     []
@@ -32,13 +42,13 @@ export function useCountryPositions(countryId: string, currentPrice: number) {
   const [closingPositions, setClosingPositions] = useState<string[]>([]);
 
   // Filter positions by country ID and add P&L calculations
-  const positions = useMemo(() => {
+  const positionsMemo = useMemo(() => {
     if (!allPositions || allPositions.length === 0) return [];
 
     try {
       // First, filter positions for this country
       const filteredPositions = allPositions.filter(
-        (pos) => pos.country.id === countryId
+        (pos) => pos.country?.id === countryId
       );
 
       // Then add P&L calculations and convert to extended positions
@@ -83,6 +93,31 @@ export function useCountryPositions(countryId: string, currentPrice: number) {
     }
   }, [allPositions, countryId, currentPrice, closingPositions]);
 
+  // Update positions when positionsMemo changes
+  useEffect(() => {
+    setPositions(positionsMemo);
+  }, [positionsMemo]);
+
+  // Function to force refresh positions
+  const refresh = useCallback(() => {
+    console.log("Refreshing positions for country:", countryId);
+
+    // Call refreshPositions() which now returns a Promise
+    return refreshPositions()
+      .then(() => {
+        console.log(
+          `Positions for country ${countryId} refreshed successfully`
+        );
+        setLastRefreshed(new Date());
+      })
+      .catch((error) => {
+        console.error(
+          `Error refreshing positions for country ${countryId}:`,
+          error
+        );
+      });
+  }, [refreshPositions, countryId]);
+
   // Calculate total P&L for active positions
   const totalPnL = useMemo(() => {
     if (!positions || positions.length === 0) return 0;
@@ -98,67 +133,73 @@ export function useCountryPositions(countryId: string, currentPrice: number) {
   }, [positions, closedPositions, countryId]);
 
   // Function to mark a position as closing
-  const markPositionClosing = (positionId: string) => {
-    // Check if the position is already marked as closing
-    if (closingPositions.includes(positionId)) {
-      // If called again for the same position, toggle it off (cancel closing state)
-      setClosingPositions((prev) => prev.filter((id) => id !== positionId));
-      return;
-    }
+  const markPositionClosing = useCallback(
+    (positionId: string) => {
+      // Check if the position is already marked as closing
+      if (closingPositions.includes(positionId)) {
+        // If called again for the same position, toggle it off (cancel closing state)
+        setClosingPositions((prev) => prev.filter((id) => id !== positionId));
+        return;
+      }
 
-    // Check if the position exists at all
-    const positionExists =
-      positions.some((p) => p.id === positionId) ||
-      closedPositions.some((p) => p.id === positionId);
+      // Check if the position exists at all
+      const positionExists =
+        positions.some((p) => p.id === positionId) ||
+        closedPositions.some((p) => p.id === positionId);
 
-    if (!positionExists) {
-      console.warn(
-        `Tried to mark non-existent position ${positionId} as closing`
-      );
-      return;
-    }
+      if (!positionExists) {
+        console.warn(
+          `Tried to mark non-existent position ${positionId} as closing`
+        );
+        return;
+      }
 
-    // Add to closing positions
-    setClosingPositions((prev) => [...prev, positionId]);
-  };
+      // Add to closing positions
+      setClosingPositions((prev) => [...prev, positionId]);
+    },
+    [positions, closedPositions]
+  );
 
   // Function to mark a position as closed
-  const markPositionClosed = (positionId: string) => {
-    // Find the position in our active positions
-    const position = positions.find((p) => p.id === positionId);
+  const markPositionClosed = useCallback(
+    (positionId: string) => {
+      // Find the position in our active positions
+      const position = positions.find((p) => p.id === positionId);
 
-    // Check if position already exists in closed positions
-    const alreadyClosed = closedPositions.some((p) => p.id === positionId);
+      // Check if position already exists in closed positions
+      const alreadyClosed = closedPositions.some((p) => p.id === positionId);
 
-    if (alreadyClosed) {
-      console.log(`Position ${positionId} already marked as closed`);
-      // Remove from closing positions if it was there
+      if (alreadyClosed) {
+        console.log(`Position ${positionId} already marked as closed`);
+        // Remove from closing positions if it was there
+        setClosingPositions((prev) => prev.filter((id) => id !== positionId));
+        return;
+      }
+
+      if (!position) {
+        console.warn(
+          `Tried to mark non-existent position ${positionId} as closed`
+        );
+        // Remove from closing positions if it was there
+        setClosingPositions((prev) => prev.filter((id) => id !== positionId));
+        return;
+      }
+
+      // Create a closed position entry
+      const closedPosition: ExtendedPosition = {
+        ...position,
+        status: PositionStatus.CLOSED,
+        closedAt: new Date(),
+      };
+
+      // Add to closed positions
+      setClosedPositions((prev) => [...prev, closedPosition]);
+
+      // Remove from closing positions
       setClosingPositions((prev) => prev.filter((id) => id !== positionId));
-      return;
-    }
-
-    if (!position) {
-      console.warn(
-        `Tried to mark non-existent position ${positionId} as closed`
-      );
-      // Remove from closing positions if it was there
-      setClosingPositions((prev) => prev.filter((id) => id !== positionId));
-      return;
-    }
-
-    // Create a closed position entry
-    const closedPosition: ExtendedPosition = {
-      ...position,
-      status: PositionStatus.CLOSED,
-      closedAt: new Date(),
-    };
-
-    // Add to closed positions
-    setClosedPositions((prev) => [...prev, closedPosition]);
-
-    // Remove from closing positions
-    setClosingPositions((prev) => prev.filter((id) => id !== positionId));
-  };
+    },
+    [positions, closedPositions]
+  );
 
   // Clean up old closed positions after a certain time
   useEffect(() => {
@@ -187,6 +228,8 @@ export function useCountryPositions(countryId: string, currentPrice: number) {
     totalPnL,
     markPositionClosing,
     markPositionClosed,
+    refresh,
+    lastRefreshed,
   };
 }
 
