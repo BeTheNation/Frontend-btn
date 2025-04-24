@@ -300,30 +300,33 @@ export function logContractError(error: any, context?: string): void {
 }
 
 // Helper function to get error type from message
-function getErrorTypeFromMessage(message?: string): { message: string; code: string } | null {
+function getErrorTypeFromMessage(
+  message?: string
+): { message: string; code: string } | null {
   if (!message) return null;
-  
+
   if (message.includes("insufficient funds")) {
     return {
       message: "Insufficient funds to execute transaction",
       code: "INSUFFICIENT_FUNDS",
     };
   }
-  
+
   if (message.includes("user rejected") || message.includes("user denied")) {
     return {
       message: "Transaction was rejected by the user",
       code: "USER_REJECTED",
     };
   }
-  
+
   if (message.includes("gas required exceeds")) {
     return {
-      message: "Transaction requires too much gas. Try simplifying the operation.",
+      message:
+        "Transaction requires too much gas. Try simplifying the operation.",
       code: "GAS_LIMIT_EXCEEDED",
     };
   }
-  
+
   return null;
 }
 
