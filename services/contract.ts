@@ -344,4 +344,26 @@ export class ContractService {
       };
     }
   }
+
+  /**
+   * Fetch positions from the blockchain without using React hooks
+   * Used by the position store to get positions
+   */
+  async fetchPositions() {
+    try {
+      console.log("Fetching positions from blockchain using ContractService");
+
+      // Implementation note: In a real app, you would use a provider instance
+      // that's passed to the service or use a global provider
+
+      // For now, just return an empty array to avoid errors
+      // This is a placeholder that should be implemented with your actual
+      // smart contract integration logic
+
+      return [];
+    } catch (error) {
+      console.error("Error fetching positions:", error);
+      return [];
+    }
+  }
 }

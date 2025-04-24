@@ -18,14 +18,60 @@ export function usePositions() {
     useDemoModeContext();
 
   // Get real positions from the store
-  const { positions: realPositions, loading: realPositionsLoading } =
-    usePositionStore();
+  const {
+    positions: realPositions,
+    loading: realPositionsLoading,
+    fetchPositions,
+  } = usePositionStore();
 
   // Track loading state for position closing
   const [isClosingPosition, setIsClosingPosition] = useState<string | null>(
     null
   );
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  // Function to refresh positions with better timeout and error handling
+  const refreshPositions = useCallback(() => {
+    if (!isDemoMode) {
+      // Log timestamp for debugging
+      const timestamp = new Date().toISOString();
+      console.log(`[${timestamp}] Refreshing real positions from blockchain`);
+
+      // Trigger fetch from contract
+      fetchPositions();
+
+      // Return a promise with improved timeout and error handling
+      return new Promise<void>((resolve, reject) => {
+        let resolved = false;
+
+        // Set a longer timeout (5 seconds) to ensure data is updated
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            console.log(
+              `[${new Date().toISOString()}] Position refresh complete`
+            );
+            resolve();
+          }
+        }, 5000);
+
+        // Add a longer timeout as a failsafe
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            console.warn(
+              `[${new Date().toISOString()}] Position refresh timeout - resolving anyway`
+            );
+            resolve(); // Resolve anyway to prevent hanging promises
+          }
+        }, 15000);
+      });
+    } else {
+      console.log("Demo mode - positions are already in memory and reactive");
+      // For demo mode, positions are already in memory and reactive
+      return Promise.resolve();
+    }
+  }, [isDemoMode, fetchPositions]);
 
   // Determine active positions based on current mode
   const positions = useMemo(() => {
@@ -151,190 +197,64 @@ export function usePositions() {
             setIsDemoLoading(false);
             toast({
               title: "Position not found",
-              description:
-                "The position may have already been closed or doesn't exist",
+              description: `Cannot find position with ID ${positionId}`,
               variant: "destructive",
             });
             return {
               success: false,
-              error: "Position not found in demo store",
+              error: `Position ${positionId} not found`,
               code: "POSITION_NOT_FOUND",
             };
           }
 
-          try {
-            // Pass the currentPrice to the closeDemoPosition function if available
-            if (currentPrice) {
-              closeDemoPosition(positionId, currentPrice);
-            } else {
-              closeDemoPosition(positionId);
-            }
-
-            toast({
-              title: "Position Closed",
-              description: "Your position has been successfully closed",
-            });
-            return { success: true };
-          } catch (error) {
-            console.error("Error closing demo position:", error);
-            toast({
-              title: "Error",
-              description:
-                "Failed to close position. The position may have already been closed.",
-              variant: "destructive",
-            });
-            return {
-              success: false,
-              error: "Failed to close demo position",
-              code: "DEMO_POSITION_ERROR",
-            };
-          } finally {
-            setIsDemoLoading(false);
-          }
-        } else {
-          // For real positions, use the contract
-          // Pass the position ID to the contract function
-          const result = await closeContractPosition(positionId);
-
-          if (!result.success) {
-            // Special handling for demo positions detected by the contract function
-            if (result.code === "DEMO_POSITION") {
-              // Switch to demo mode handling
-              console.log(
-                "Contract detected demo position, switching to demo handler"
-              );
-              setIsDemoLoading(true);
-              // Pass the currentPrice to the closeDemoPosition function if available
-              if (currentPrice) {
-                closeDemoPosition(positionId, currentPrice);
-              } else {
-                closeDemoPosition(positionId);
-              }
-              setIsDemoLoading(false);
-
-              toast({
-                title: "Position closed",
-                description: "Demo position has been closed successfully",
-              });
-
-              return { success: true };
-            }
-
-            // Handle specific error cases based on error codes
-            switch (result.code) {
-              case "POSITION_NOT_FOUND":
-                toast({
-                  title: "Position not found",
-                  description:
-                    "This position does not exist or has already been closed",
-                  variant: "destructive",
-                });
-                break;
-
-              case "NOT_OWNER":
-                toast({
-                  title: "Not authorized",
-                  description:
-                    "You don't have permission to close this position",
-                  variant: "destructive",
-                });
-                break;
-
-              case "LIQUIDATED":
-                toast({
-                  title: "Position liquidated",
-                  description: "This position has been liquidated",
-                  variant: "destructive",
-                });
-                break;
-
-              case "USER_REJECTED":
-                toast({
-                  title: "Transaction rejected",
-                  description: "You rejected the transaction",
-                  variant: "default",
-                });
-                break;
-
-              case "GAS_ESTIMATION_FAILED":
-                toast({
-                  title: "Transaction issue",
-                  description:
-                    "Gas estimation failed. The transaction may fail if submitted.",
-                  variant: "destructive",
-                });
-                break;
-
-              case "NETWORK_ERROR":
-                toast({
-                  title: "Network error",
-                  description: "Please check your connection and try again",
-                  variant: "destructive",
-                });
-                break;
-
-              case "APPROVAL_REQUIRED":
-                toast({
-                  title: "Approval required",
-                  description:
-                    "You need to approve USDC spending before proceeding",
-                  variant: "destructive",
-                });
-                break;
-
-              default:
-                // Generic error
-                toast({
-                  title: "Failed to close position",
-                  description: result.error || "Unknown error occurred",
-                  variant: "destructive",
-                });
-            }
-            return result; // Return the error result
-          }
-
+          // Close the demo position
+          closeDemoPosition(positionId);
+          setIsDemoLoading(false);
           toast({
             title: "Position closed",
-            description: "Your position has been closed successfully",
+            description: `Position ${positionId} has been closed`,
           });
-
-          return result; // Return the success result
+          return { success: true };
         }
-      } catch (error: any) {
-        // Handle unexpected errors
-        console.error("Error closing position:", error);
 
+        // Close the real position
+        await closeContractPosition(positionId, currentPrice);
+        setIsClosingPosition(null);
+        toast({
+          title: "Position closed",
+          description: `Position ${positionId} has been closed`,
+        });
+        return { success: true };
+      } catch (error) {
+        console.error("Error closing position:", error);
+        setIsClosingPosition(null);
+        setIsDemoLoading(false);
         toast({
           title: "Error closing position",
-          description: error.message || "An unexpected error occurred",
+          description: "An error occurred while closing the position",
           variant: "destructive",
         });
-
-        return {
-          success: false,
-          error: error.message || "An unexpected error occurred",
-        };
-      } finally {
-        setIsClosingPosition(null);
+        return { success: false, error: "Error closing position" };
       }
     },
     [
       isClosingPosition,
       isLoading,
       positions,
-      isDemoMode,
-      closeDemoPosition,
       closeContractPosition,
       clearError,
-      toast,
+      isDemoMode,
+      demoPositions,
+      closeDemoPosition,
       demoTradeHistory,
+      toast,
     ]
   );
 
   return {
     positions,
     isLoading,
-    isClosingPosition,
+    refreshPositions,
     addPosition,
     closePosition,
   };

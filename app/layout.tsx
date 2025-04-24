@@ -4,6 +4,8 @@ import { Providers } from "./providers";
 import Navbar from "@/components/layout/Navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WalletRedirectHandler } from "@/components/WalletRedirectHandler";
+import { PendingTransactionIndicator } from "@/components/trading/PendingTransactionIndicator";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -42,6 +44,8 @@ export default function RootLayout({
               <WalletRedirectHandler />
               <main className="container mx-auto px-4 py-8">{children}</main>
             </div>
+            <Toaster />
+            <PendingTransactionIndicator />
           </ThemeProvider>
         </Providers>
       </body>

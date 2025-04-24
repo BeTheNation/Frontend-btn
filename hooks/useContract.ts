@@ -717,11 +717,43 @@ export function useContract() {
 
   // Get all positions owned by the current user
   const getPositions = async (): Promise<Position[]> => {
-    console.log("Getting all positions");
+    console.log("Getting all positions from contract");
     try {
-      // For now, return empty array - implement actual logic later
-      return [];
+      if (!address || !publicClient || !contractAddress) {
+        console.warn("Missing dependencies for getPositions:", {
+          hasAddress: !!address,
+          hasPublicClient: !!publicClient,
+          hasContractAddress: !!contractAddress,
+        });
+        return [];
+      }
+
+      // Call the contract's getUserPositions function
+      const contractPositions = await publicClient.readContract({
+        address: contractAddress as `0x${string}`,
+        abi: PREDICTION_MARKET_ABI,
+        functionName: "getUserPositions",
+        args: [address],
+      });
+
+      console.log("Raw contract positions:", contractPositions);
+
+      // Map contract positions to our app Position type
+      const positions = await Promise.all(
+        (contractPositions as any[]).map(async (contractPos) => {
+          const countryData = countries.find(
+            (c: Country) => c.id === contractPos.countryId
+          );
+          if (!countryData) return null;
+
+          return contractPositionToPosition(contractPos, countryData);
+        })
+      );
+
+      // Filter out null values
+      return positions.filter(Boolean) as Position[];
     } catch (error) {
+      console.error("Error fetching positions from contract:", error);
       handleContractError(error);
       return [];
     }
@@ -832,6 +864,86 @@ export function useContract() {
     };
   };
 
+  /**
+   * Wait for a transaction to be confirmed with robust retry logic
+   * @param txHash The transaction hash to monitor
+   * @param confirmations Number of confirmations to wait for (default: 1)
+   * @param maxAttempts Maximum number of retry attempts (default: 30)
+   * @returns Object with success flag and receipt
+   */
+  const waitForTransaction = async (
+    txHash: string,
+    confirmations: number = 1,
+    maxAttempts: number = 30
+  ): Promise<{ success: boolean; receipt?: any; error?: string }> => {
+    if (!publicClient) {
+      return {
+        success: false,
+        error: "Public client not available",
+      };
+    }
+
+    let attempts = 0;
+    const retryInterval = 5000; // 5 seconds between retries
+
+    const attemptWait = async (): Promise<{
+      success: boolean;
+      receipt?: any;
+      error?: string;
+    }> => {
+      try {
+        attempts++;
+        console.log(
+          `Waiting for transaction ${txHash} to be confirmed... (Attempt ${attempts}/${maxAttempts})`
+        );
+
+        // Wait for the transaction receipt with a timeout
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash: txHash as `0x${string}`,
+          confirmations,
+          timeout: 15000, // 15 second timeout for each call
+        });
+
+        console.log(
+          `Transaction ${txHash} confirmed with status:`,
+          receipt.status
+        );
+
+        if (receipt.status === "success") {
+          return {
+            success: true,
+            receipt,
+          };
+        } else {
+          return {
+            success: false,
+            receipt,
+            error: "Transaction failed on-chain",
+          };
+        }
+      } catch (error) {
+        console.error(
+          `Error waiting for transaction confirmation (attempt ${attempts}):`,
+          error
+        );
+
+        // If still under the attempt limit, retry
+        if (attempts < maxAttempts) {
+          console.log(`Retrying in ${retryInterval / 1000} seconds...`);
+          await new Promise((resolve) => setTimeout(resolve, retryInterval));
+          return attemptWait();
+        }
+
+        return {
+          success: false,
+          error: `Transaction not confirmed after ${attempts} attempts. Please check transaction ${txHash} in block explorer.`,
+        };
+      }
+    };
+
+    return attemptWait();
+  };
+
   console.log("Contract address:", contractAddress);
   console.log("Current chain ID:", chain?.id);
 
@@ -858,5 +970,6 @@ export function useContract() {
     clearError,
     handleClosePosition: closePosition,
     handleSetTPSL: handleSetTPSL,
+    waitForTransaction,
   };
 }

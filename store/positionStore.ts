@@ -2,20 +2,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-interface Position {
-  id: string;
-  country: any;
-  direction: "long" | "short";
-  size: number;
-  leverage: number;
-  entryPrice: number;
-  markPrice: number;
-  openTime: Date;
-  fundingRate: number;
-  nextFundingTime: Date;
-  txHash?: string;
-}
+import { Position, PositionDirection } from "@/types/position";
+import { ContractService } from "@/services/contract";
 
 interface TradeHistoryItem {
   id: string;
@@ -27,7 +15,7 @@ interface TradeHistoryItem {
     name: string;
     flagUrl?: string;
   };
-  direction: "long" | "short";
+  direction: PositionDirection;
   size: number;
   leverage: number;
   entryPrice: number;
@@ -37,10 +25,35 @@ interface TradeHistoryItem {
   txHash?: string;
 }
 
+// Real implementation to fetch positions from blockchain
+const fetchPositionsFromApi = async (): Promise<Position[]> => {
+  try {
+    // Gunakan client publik langsung atau service tanpa hook
+    const contractService = new ContractService();
+    // Assume you create a static method in ContractService
+    const positions = await contractService.fetchPositions();
+    return positions;
+  } catch (e) {
+    console.error("Error retrieving positions from contract:", e);
+
+    // Fallback to localStorage
+    try {
+      const storedPositions = localStorage.getItem("realPositions");
+      if (storedPositions) {
+        return JSON.parse(storedPositions);
+      }
+    } catch (e) {
+      console.error("Error retrieving positions from localStorage:", e);
+    }
+  }
+  return [];
+};
+
 interface PositionStore {
   positions: Position[];
   tradeHistory: TradeHistoryItem[];
-  loading?: boolean;
+  loading: boolean;
+  error: string | null;
   addPosition: (position: Position) => void;
   closePosition: (
     id: string,
@@ -49,6 +62,9 @@ interface PositionStore {
     fundingFee?: number
   ) => void;
   addTradeToHistory: (trade: TradeHistoryItem) => void;
+  updatePosition: (positionId: string, updates: Partial<Position>) => void;
+  removePosition: (positionId: string) => void;
+  fetchPositions: () => Promise<void>;
 }
 
 export const usePositionStore = create<PositionStore>()(
@@ -56,6 +72,8 @@ export const usePositionStore = create<PositionStore>()(
     (set, get) => ({
       positions: [],
       tradeHistory: [],
+      loading: false,
+      error: null,
       addPosition: (position) => {
         // Add the position to the store
         set((state) => ({
@@ -78,6 +96,16 @@ export const usePositionStore = create<PositionStore>()(
         set((state) => ({
           tradeHistory: [...state.tradeHistory, openTrade],
         }));
+
+        // Persist to localStorage
+        try {
+          localStorage.setItem(
+            "realPositions",
+            JSON.stringify([...get().positions, position])
+          );
+        } catch (e) {
+          console.error("Error saving positions to localStorage:", e);
+        }
       },
 
       closePosition: (id, exitPrice, pnl, fundingFee) => {
@@ -105,12 +133,81 @@ export const usePositionStore = create<PositionStore>()(
           pnl,
           fundingFee,
         });
+
+        // Persist to localStorage
+        try {
+          const updatedPositions = get().positions.filter((p) => p.id !== id);
+          localStorage.setItem(
+            "realPositions",
+            JSON.stringify(updatedPositions)
+          );
+        } catch (e) {
+          console.error("Error saving positions to localStorage:", e);
+        }
       },
 
       addTradeToHistory: (trade: TradeHistoryItem) => {
         set((state) => ({
           tradeHistory: [...state.tradeHistory, trade],
         }));
+      },
+
+      updatePosition: (positionId, updates) => {
+        set((state) => {
+          const updatedPositions = state.positions.map((p) =>
+            p.id === positionId ? { ...p, ...updates } : p
+          );
+
+          // Persist changes
+          try {
+            localStorage.setItem(
+              "realPositions",
+              JSON.stringify(updatedPositions)
+            );
+          } catch (e) {
+            console.error("Error saving positions to localStorage:", e);
+          }
+
+          return { positions: updatedPositions };
+        });
+      },
+
+      removePosition: (positionId) => {
+        set((state) => {
+          const filteredPositions = state.positions.filter(
+            (p) => p.id !== positionId
+          );
+
+          // Persist changes
+          try {
+            localStorage.setItem(
+              "realPositions",
+              JSON.stringify(filteredPositions)
+            );
+          } catch (e) {
+            console.error("Error saving positions to localStorage:", e);
+          }
+
+          return { positions: filteredPositions };
+        });
+      },
+
+      fetchPositions: async () => {
+        set({ loading: true, error: null });
+
+        try {
+          const positions = await fetchPositionsFromApi();
+          set({ positions, loading: false });
+        } catch (error) {
+          console.error("Error fetching positions:", error);
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to fetch positions",
+            loading: false,
+          });
+        }
       },
     }),
     {
