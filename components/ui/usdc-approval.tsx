@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { parseEther } from "viem";
@@ -88,7 +88,7 @@ export function USDCApproval({
 
   const getApprovalAmount = () => {
     try {
-      // Gunakan formatMarginAmount untuk 6 desimal (USDC)
+      // Use formatMarginAmount for 6 decimals (USDC)
       const amountBigInt = formatMarginAmount(amount);
       // Add a 20% buffer to the amount
       const buffer = (amountBigInt * BigInt(20)) / BigInt(100);
@@ -104,7 +104,7 @@ export function USDCApproval({
       return totalAmount;
     } catch (error) {
       console.error("Error calculating approval amount:", error);
-      // Return a default value menggunakan formatMarginAmount
+      // Return a default value using formatMarginAmount
       return formatMarginAmount(amount);
     }
   };
@@ -136,7 +136,7 @@ export function USDCApproval({
     try {
       // Ensure contract address is valid
       if (!ethers.isAddress(resolvedContractAddress)) {
-        throw new Error("Alamat kontrak tidak valid");
+        throw new Error("Invalid contract address");
       }
 
       // Enhanced logging for approval process

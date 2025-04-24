@@ -21,8 +21,8 @@ import {
   getUSDCContract,
   approveUSDC,
   formatMarginAmount,
-  // Untuk menghindari circular dependency, gunakan import langsung di fungsi yang membutuhkan
-  // bukan dari import global di atas
+  // To avoid circular dependency, use direct imports in functions that need them
+  // instead of from global imports above
   // CONTRACT_ADDRESSES,
   // USDC_ADDRESSES,
 } from "@/lib/contracts/PredictionMarket";
@@ -299,7 +299,7 @@ export function useContract() {
       !size ||
       parseFloat(size) <= 0
     ) {
-      throw new Error("Parameter tidak valid");
+      throw new Error("Invalid parameters");
     }
 
     try {
@@ -368,7 +368,7 @@ export function useContract() {
         isDemoMode,
       });
 
-      // Gunakan gas estimation dengan buffer
+      // Add gas estimation with buffer
       const tx = await contract.write.openPosition({
         args: [
           countryId,

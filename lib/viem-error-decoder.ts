@@ -299,35 +299,75 @@ export function logContractError(error: any, context?: string): void {
   }
 }
 
+// Helper function to get error type from message
+function getErrorTypeFromMessage(message?: string): { message: string; code: string } | null {
+  if (!message) return null;
+  
+  if (message.includes("insufficient funds")) {
+    return {
+      message: "Insufficient funds to execute transaction",
+      code: "INSUFFICIENT_FUNDS",
+    };
+  }
+  
+  if (message.includes("user rejected") || message.includes("user denied")) {
+    return {
+      message: "Transaction was rejected by the user",
+      code: "USER_REJECTED",
+    };
+  }
+  
+  if (message.includes("gas required exceeds")) {
+    return {
+      message: "Transaction requires too much gas. Try simplifying the operation.",
+      code: "GAS_LIMIT_EXCEEDED",
+    };
+  }
+  
+  return null;
+}
+
 /**
  * Specialized decoder for Viem's ContractFunctionExecutionError
  * This handles the specific error format of viem's contract execution errors
  */
-export function handleContractFunctionExecutionError(error: any) {
-  // Tambahkan logging detail
-  console.log("Error penuh:", JSON.stringify(error, null, 2));
+export function handleContractFunctionExecutionError(err: any): {
+  message: string;
+  code?: string;
+} {
+  try {
+    // Extract error data more effectively
+    const errorData = err.cause?.error?.data || err.cause?.data;
 
-  // Ekstrak error data dengan lebih baik
-  const errorData = error.cause?.data || error.data;
-  const errorName = error.cause?.name || error.name;
-  const shortMessage = error.cause?.shortMessage || error.shortMessage;
+    // Add specific handling for common errors
+    if (err.message?.includes("insufficient funds")) {
+      return {
+        message: "Insufficient funds to execute transaction",
+        code: "INSUFFICIENT_FUNDS",
+      };
+    }
 
-  // Tambahkan penanganan spesifik untuk error yang sering terjadi
-  if (shortMessage?.includes("insufficient funds")) {
+    // Handle other errors
+    const errorType = getErrorTypeFromMessage(err.message);
+    if (errorType) {
+      return errorType;
+    }
+
+    // Default error message
     return {
-      message: "Dana tidak mencukupi untuk menjalankan transaksi",
-      code: "INSUFFICIENT_FUNDS",
+      message: "An error occurred while executing the contract",
+      code: "CONTRACT_ERROR",
+    };
+  } catch (decodingError) {
+    console.error(
+      "Error in handleContractFunctionExecutionError:",
+      decodingError
+    );
+    return {
+      message: "An internal error occurred while processing the contract error",
+      code: "INTERNAL_ERROR",
     };
   }
-
-  // Tangani error lainnya
-  return {
-    message:
-      errorName === "ContractFunctionExecutionError"
-        ? "Kontrak gagal dieksekusi. Periksa parameter input Anda."
-        : shortMessage || "Terjadi kesalahan saat memanggil kontrak",
-    code: "CONTRACT_ERROR",
-  };
 }
 
 /**
