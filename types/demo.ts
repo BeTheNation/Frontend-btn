@@ -39,6 +39,7 @@ export interface DemoTradeHistoryItem {
 // Interface for demo mode store
 export interface DemoModeStore {
   isDemoMode: boolean;
+  manualDemoMode: boolean;
   demoBalance: number;
   demoPositions: DemoPosition[];
   demoTradeHistory: DemoTradeHistoryItem[];
@@ -53,4 +54,7 @@ export interface DemoModeStore {
   ) => void;
   clearAllDemoPositions: () => void;
   resetDemoMode: () => void;
+  forceDisableDemoMode: () => void;
+  forceEnableDemoMode: () => void;
+  setDemoModeBasedOnNetwork: (chainId: number | undefined) => void;
 }

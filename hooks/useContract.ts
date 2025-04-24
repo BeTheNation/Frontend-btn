@@ -11,7 +11,6 @@ import {
   useWalletClient,
 } from "wagmi";
 import {
-  PREDICTION_MARKET_ABI,
   getContractAddress,
   getPredictionMarketContract,
   openPosition as contractOpenPosition,
@@ -22,7 +21,12 @@ import {
   getUSDCContract,
   approveUSDC,
   formatMarginAmount,
+  // Untuk menghindari circular dependency, gunakan import langsung di fungsi yang membutuhkan
+  // bukan dari import global di atas
+  // CONTRACT_ADDRESSES,
+  // USDC_ADDRESSES,
 } from "@/lib/contracts/PredictionMarket";
+import { PREDICTION_MARKET_ABI } from "@/lib/contracts/constants";
 import type { Position } from "@/lib/contracts/types";
 import { useToast } from "@/components/ui/use-toast";
 import { useCountries, type Country } from "@/hooks/useCountries";
@@ -53,13 +57,24 @@ export function useContract() {
   const publicClient = usePublicClient();
   const { toast } = useToast();
   const { countries } = useCountries();
-  const { isDemoMode } = useDemoModeContext();
+  const { isDemoMode, setDemoModeBasedOnNetwork } = useDemoModeContext();
   const contractAddress = chain ? getContractAddress(chain.id) : undefined;
   const predictionContract = contractAddress;
 
   const [error, setError] = useState<string | null>(null);
   const [isApproved, setIsApproved] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Update demo mode based on network
+  useEffect(() => {
+    if (chain?.id) {
+      // Override demo mode based on network
+      setDemoModeBasedOnNetwork(chain.id);
+    }
+  }, [chain?.id, setDemoModeBasedOnNetwork]);
+
+  // Add enhanced debug logging
+  console.log("🧪 isDemoMode:", isDemoMode, "Chain ID:", chain?.id);
 
   // Add debug logging
   console.debug("Contract initialization:", {
@@ -242,6 +257,40 @@ export function useContract() {
     leverage: number,
     size: string
   ) => {
+    // Ensure we're on Base Sepolia and not in demo mode
+    if (chain?.id !== 84532) {
+      console.warn(
+        "🚨 Demo mode or wrong network detected! Please switch to Base Sepolia (chainId 84532) to proceed with live transactions."
+      );
+      toast({
+        title: "Network Error",
+        description:
+          "You're on the wrong network. Switch to Base Sepolia to execute live orders!",
+        variant: "destructive",
+      });
+      return {
+        success: false,
+        error: "Wrong network. Must use Base Sepolia (chainId 84532)",
+        code: "WRONG_NETWORK",
+      };
+    }
+
+    if (isDemoMode) {
+      console.warn(
+        "🚨 Demo mode active! Please disable demo mode to proceed with live transactions."
+      );
+      toast({
+        title: "Demo Mode Active",
+        description: "You're in DEMO MODE. Disable it to execute live orders!",
+        variant: "destructive",
+      });
+      return {
+        success: false,
+        error: "Demo mode active. Please disable to use real transactions",
+        code: "DEMO_MODE_ACTIVE",
+      };
+    }
+
     // Validasi input
     if (
       !countryId ||
@@ -304,6 +353,21 @@ export function useContract() {
         formatMarginAmount(size)
       );
 
+      // Log transaction details before sending
+      console.log("📊 TRANSACTION FLOW - STEP 1: OPENING POSITION", {
+        network: chain?.name,
+        chainId: chain?.id,
+        contractAddress,
+        countryId,
+        direction: side,
+        leverage,
+        sizeOriginal: size,
+        sizeFormatted: formatMarginAmount(size).toString(),
+        userAddress: address,
+        gasEstimation: gasEstimation.toString(),
+        isDemoMode,
+      });
+
       // Gunakan gas estimation dengan buffer
       const tx = await contract.write.openPosition({
         args: [
@@ -314,6 +378,20 @@ export function useContract() {
         ],
         gas: BigInt(Math.floor(Number(gasEstimation) * 1.2)),
       });
+
+      console.log("📊 TRANSACTION FLOW - STEP 2: POSITION OPENED", {
+        txHash: tx,
+        timestamp: new Date().toISOString(),
+      });
+
+      toast({
+        title: "Position Opening",
+        description:
+          "Transaction submitted to blockchain. Updating positions...",
+      });
+
+      // Here we would trigger position update
+      // This could be done by dispatching an event or calling a function
 
       return tx;
     } catch (error) {
@@ -349,7 +427,15 @@ export function useContract() {
 
       try {
         // The contract expects the position ID, not just the user's address
-        console.log("Sending closePosition with positionId:", positionId);
+        console.log("📊 TRANSACTION FLOW - STEP 1: CLOSING POSITION", {
+          positionId,
+          userAddress: address,
+          contractAddress,
+          network: chain?.name,
+          chainId: chain?.id,
+          timestamp: new Date().toISOString(),
+          isDemoMode,
+        });
 
         // Simulate the transaction first to catch pre-execution errors
         try {
@@ -398,7 +484,10 @@ export function useContract() {
           },
         });
 
-        console.log("Transaction sent:", txHash.hash);
+        console.log("📊 TRANSACTION FLOW - STEP 2: POSITION CLOSED", {
+          txHash: txHash.hash,
+          timestamp: new Date().toISOString(),
+        });
 
         // Display a toast notification for the pending transaction
         toast({
@@ -410,7 +499,13 @@ export function useContract() {
         // Wait for transaction confirmation
         const receipt = await txHash.wait();
 
-        console.log("Transaction receipt:", receipt);
+        console.log(
+          "📊 TRANSACTION FLOW - STEP 3: POSITION CLOSURE CONFIRMED",
+          {
+            txReceipt: receipt,
+            timestamp: new Date().toISOString(),
+          }
+        );
 
         // Successful transaction toast
         toast({
@@ -418,6 +513,27 @@ export function useContract() {
           description: "Your position has been successfully closed",
           variant: "default",
         });
+
+        // Trigger P&L calculation and balance update
+        console.log("📊 TRANSACTION FLOW - STEP 4: UPDATING P&L AND BALANCE", {
+          positionId,
+          timestamp: new Date().toISOString(),
+        });
+
+        // This is where you would trigger P&L calculation and balance updates
+        // through your store or other mechanisms
+
+        // Update transaction history
+        console.log(
+          "📊 TRANSACTION FLOW - STEP 5: UPDATING TRANSACTION HISTORY",
+          {
+            type: "POSITION_CLOSED",
+            positionId,
+            timestamp: new Date().toISOString(),
+          }
+        );
+
+        // This is where you would update transaction history
 
         setIsLoading(false);
         return {
@@ -580,6 +696,13 @@ export function useContract() {
       if (!data.data) return null;
 
       const contractPos = data.data;
+      if (contractPos.positionId.toString() !== positionId.toString()) {
+        console.warn("Position ID mismatch:", {
+          requested: positionId.toString(),
+          received: contractPos.positionId.toString(),
+        });
+      }
+
       const countryData = countries.find(
         (c: Country) => c.id === contractPos.countryId
       );
@@ -708,6 +831,19 @@ export function useContract() {
       error: err.message || "Unknown contract error",
     };
   };
+
+  console.log("Contract address:", contractAddress);
+  console.log("Current chain ID:", chain?.id);
+
+  // Clear status message about demo mode
+  console.log(
+    `%c${
+      isDemoMode ? "🚨 DEMO MODE ACTIVE" : "✅ LIVE MODE - REAL TRANSACTIONS"
+    } (Chain: ${chain?.name || "Not Connected"}, ID: ${chain?.id || "None"})`,
+    `color: ${
+      isDemoMode ? "orange" : "green"
+    }; font-weight: bold; font-size: 14px;`
+  );
 
   return {
     openPosition,
