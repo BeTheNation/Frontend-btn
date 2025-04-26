@@ -18,6 +18,8 @@ import { USDCApproval } from "@/components/ui/usdc-approval";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCountryPositions } from "@/hooks/useCountryPositions";
 import { usePositionStore } from "@/store/positionStore";
+import { PositionDisplay } from "@/components/trading/PositionDisplay";
+import { useTradeHistoryStore } from '@/store/tradeHistoryStore';
 
 // Sample country data - in a real app, this would come from an API
 const countryData = {
@@ -41,6 +43,226 @@ const countryData = {
       "The USA is one of the largest and most influential economies globally, driven by a diverse range of sectors including technology, finance, and consumer goods. With a CountryScore of 1,839, the U.S. reflects a strong economic performance, supported by GDP growth, low unemployment, and a stable inflation rate. The market is dominated by robust stock exchanges such as the S&P 500 and NASDAQ, which are major indicators of global investor sentiment.",
     liquidationPrice: "5.41M",
   },
+  brazil: {
+    name: "Brazil",
+    flagCode: "br",
+    countryScore: 900,
+    volume24h: "$600,000",
+    indexPrice: "$720,000",
+    sentiment: "Bearish",
+    changePercent: -0.3,
+    trend: "down",
+    markPrice: "2.15M",
+    fundingRate: "0.015%",
+    openInterest: "$3,200,000",
+    openTrades: "$85,000",
+    volumes: "$150,000",
+    fundingCooldown: "00:45:20",
+    fundingPercent: "0.4500%",
+    description:
+      "Brazil is the largest economy in South America, known for its rich natural resources and diverse industrial base. With a CountryScore of 900, Brazil's economy shows moderate growth potential, supported by its agricultural exports, mining sector, and growing technology industry. The country faces challenges with inflation and fiscal policy, but maintains strong potential in renewable energy and sustainable development.",
+    liquidationPrice: "3.22M",
+  },
+  germany: {
+    name: "Germany",
+    flagCode: "de",
+    countryScore: 1200,
+    volume24h: "$800,000",
+    indexPrice: "$1,100,000",
+    sentiment: "Bearish",
+    changePercent: -1.8,
+    trend: "down",
+    markPrice: "2.85M",
+    fundingRate: "0.012%",
+    openInterest: "$4,500,000",
+    openTrades: "$95,000",
+    volumes: "$180,000",
+    fundingCooldown: "00:42:15",
+    fundingPercent: "0.3800%",
+    description:
+      "Germany is Europe's largest economy and a global leader in manufacturing and engineering. With a CountryScore of 1,200, Germany's economy is characterized by its strong industrial base, particularly in automotive and machinery sectors. The country faces challenges with energy transition and demographic changes, but maintains a robust export-oriented economy and high standards of living.",
+    liquidationPrice: "4.27M",
+  },
+  japan: {
+    name: "Japan",
+    flagCode: "jp",
+    countryScore: 1600,
+    volume24h: "$1,050,000",
+    indexPrice: "$950,000",
+    sentiment: "Bearish",
+    changePercent: 0.5,
+    trend: "up",
+    markPrice: "3.25M",
+    fundingRate: "0.008%",
+    openInterest: "$5,800,000",
+    openTrades: "$110,000",
+    volumes: "$220,000",
+    fundingCooldown: "00:35:10",
+    fundingPercent: "0.2500%",
+    description:
+      "Japan is the world's third-largest economy, known for its advanced technology and manufacturing sectors. With a CountryScore of 1,600, Japan's economy shows resilience despite challenges with aging population and deflation. The country leads in robotics, electronics, and automotive industries, while maintaining a strong focus on innovation and quality manufacturing.",
+    liquidationPrice: "4.87M",
+  },
+  india: {
+    name: "India",
+    flagCode: "in",
+    countryScore: 1050,
+    volume24h: "$1,200,000",
+    indexPrice: "$850,000",
+    sentiment: "Bullish",
+    changePercent: 2.1,
+    trend: "up",
+    markPrice: "2.55M",
+    fundingRate: "0.018%",
+    openInterest: "$4,200,000",
+    openTrades: "$90,000",
+    volumes: "$190,000",
+    fundingCooldown: "00:48:30",
+    fundingPercent: "0.5200%",
+    description:
+      "India is one of the world's fastest-growing major economies, driven by its large domestic market and growing technology sector. With a CountryScore of 1,050, India's economy shows strong potential in IT services, manufacturing, and consumer goods. The country faces challenges with infrastructure and income inequality, but maintains robust growth prospects and a young, dynamic workforce.",
+    liquidationPrice: "3.82M",
+  },
+  uk: {
+    name: "United Kingdom",
+    flagCode: "gb",
+    countryScore: 1500,
+    volume24h: "$2,000,000",
+    indexPrice: "$1,350,000",
+    sentiment: "Bullish",
+    changePercent: 4.5,
+    trend: "up",
+    markPrice: "3.45M",
+    fundingRate: "0.009%",
+    openInterest: "$6,500,000",
+    openTrades: "$130,000",
+    volumes: "$250,000",
+    fundingCooldown: "00:33:20",
+    fundingPercent: "0.2800%",
+    description:
+      "The United Kingdom is one of the world's leading financial centers and a major global economy. With a CountryScore of 1,500, the UK's economy is driven by its strong financial services sector, creative industries, and advanced manufacturing. Despite challenges with Brexit and global economic shifts, the country maintains a competitive edge in technology, finance, and professional services.",
+    liquidationPrice: "5.17M",
+  },
+  china: {
+    name: "China",
+    flagCode: "cn",
+    countryScore: 1700,
+    volume24h: "$1,500,000",
+    indexPrice: "$1,100,000",
+    sentiment: "Bullish",
+    changePercent: 2.7,
+    trend: "up",
+    markPrice: "3.65M",
+    fundingRate: "0.011%",
+    openInterest: "$7,200,000",
+    openTrades: "$140,000",
+    volumes: "$280,000",
+    fundingCooldown: "00:36:15",
+    fundingPercent: "0.3200%",
+    description:
+      "China is the world's second-largest economy and a global manufacturing powerhouse. With a CountryScore of 1,700, China's economy shows strong growth potential, driven by its massive domestic market and technological innovation. The country leads in manufacturing, technology, and infrastructure development, while transitioning towards a more consumption-driven economic model.",
+    liquidationPrice: "5.47M",
+  },
+  canada: {
+    name: "Canada",
+    flagCode: "ca",
+    countryScore: 1400,
+    volume24h: "$900,000",
+    indexPrice: "$1,250,000",
+    sentiment: "Neutral",
+    changePercent: 1.1,
+    trend: "up",
+    markPrice: "3.15M",
+    fundingRate: "0.010%",
+    openInterest: "$5,500,000",
+    openTrades: "$100,000",
+    volumes: "$210,000",
+    fundingCooldown: "00:39:45",
+    fundingPercent: "0.2900%",
+    description:
+      "Canada is one of the world's wealthiest nations with a highly developed economy. With a CountryScore of 1,400, Canada's economy is characterized by its abundant natural resources, strong financial sector, and advanced technology industries. The country maintains a stable economic environment with a focus on sustainable development and innovation.",
+    liquidationPrice: "4.72M",
+  },
+  australia: {
+    name: "Australia",
+    flagCode: "au",
+    countryScore: 1450,
+    volume24h: "$850,000",
+    indexPrice: "$1,150,000",
+    sentiment: "Bullish",
+    changePercent: 3.3,
+    trend: "up",
+    markPrice: "3.25M",
+    fundingRate: "0.009%",
+    openInterest: "$5,200,000",
+    openTrades: "$95,000",
+    volumes: "$200,000",
+    fundingCooldown: "00:38:30",
+    fundingPercent: "0.2700%",
+    description:
+      "Australia is a highly developed economy with a strong focus on natural resources and services. With a CountryScore of 1,450, Australia's economy is characterized by its mining sector, agricultural exports, and growing technology industry. The country maintains a stable economic environment with a high standard of living and strong ties to Asian markets.",
+    liquidationPrice: "4.87M",
+  },
+  mexico: {
+    name: "Mexico",
+    flagCode: "mx",
+    countryScore: 950,
+    volume24h: "$500,000",
+    indexPrice: "$720,000",
+    sentiment: "Bearish",
+    changePercent: -2.1,
+    trend: "down",
+    markPrice: "2.25M",
+    fundingRate: "0.016%",
+    openInterest: "$3,500,000",
+    openTrades: "$80,000",
+    volumes: "$160,000",
+    fundingCooldown: "00:46:15",
+    fundingPercent: "0.4800%",
+    description:
+      "Mexico is a major emerging market economy with strong manufacturing and export sectors. With a CountryScore of 950, Mexico's economy shows potential in automotive manufacturing, electronics, and energy. The country faces challenges with economic inequality and security, but maintains strong trade relationships and a growing middle class.",
+    liquidationPrice: "3.37M",
+  },
+  russia: {
+    name: "Russia",
+    flagCode: "ru",
+    countryScore: 1200,
+    volume24h: "$600,000",
+    indexPrice: "$1,000,000",
+    sentiment: "Bearish",
+    changePercent: -1.5,
+    trend: "down",
+    markPrice: "2.85M",
+    fundingRate: "0.014%",
+    openInterest: "$4,000,000",
+    openTrades: "$90,000",
+    volumes: "$170,000",
+    fundingCooldown: "00:43:20",
+    fundingPercent: "0.4200%",
+    description:
+      "Russia is a major global economy with significant natural resources and industrial capacity. With a CountryScore of 1,200, Russia's economy is characterized by its energy sector, military-industrial complex, and raw materials exports. The country faces challenges with economic sanctions and diversification, but maintains strong potential in technology and manufacturing.",
+    liquidationPrice: "4.27M",
+  },
+  korea: {
+    name: "South Korea",
+    flagCode: "kr",
+    countryScore: 1300,
+    volume24h: "$750,000",
+    indexPrice: "$1,080,000",
+    sentiment: "Neutral",
+    changePercent: 0.8,
+    trend: "up",
+    markPrice: "3.05M",
+    fundingRate: "0.010%",
+    openInterest: "$4,800,000",
+    openTrades: "$100,000",
+    volumes: "$190,000",
+    fundingCooldown: "00:40:15",
+    fundingPercent: "0.3000%",
+    description:
+      "South Korea is a highly developed economy known for its technology and manufacturing sectors. With a CountryScore of 1,300, South Korea's economy is driven by its electronics, automotive, and shipbuilding industries. The country maintains a strong focus on innovation and exports, with leading global companies in various sectors.",
+    liquidationPrice: "4.57M",
+  },
 };
 
 export default function CountryPage() {
@@ -54,6 +276,8 @@ export default function CountryPage() {
   const { toast } = useToast();
   const { createPosition, isProcessing } = usePositionCreation();
   const [needsUSDCApproval, setNeedsUSDCApproval] = useState(false);
+  const [showPosition, setShowPosition] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(null);
 
   // Initialize country data first
   const [country, setCountry] = useState(countryData.usa);
@@ -106,6 +330,8 @@ export default function CountryPage() {
     };
   }, []);
 
+  const addTrade = useTradeHistoryStore((state) => state.addTrade);
+
   // Handle submitting a new trade
   const handlePlaceTrade = async () => {
     if (!isConnected || !isAmountValid || isProcessing) return;
@@ -137,7 +363,6 @@ export default function CountryPage() {
         currentPrice,
         currentPrice
       ).catch((error) => {
-        // Handle any uncaught errors from createPosition
         console.error("Error caught in handlePlaceTrade:", error);
         return {
           success: false,
@@ -148,90 +373,94 @@ export default function CountryPage() {
 
       // If position was successfully created
       if (result?.success) {
-        // First success notification was already shown in createPosition
+        // Create position object for display
+        const positionData = {
+          id: result.position?.id || `pos-${Date.now()}`,
+          country: {
+            id: countryId,
+            name: country.name,
+            flagUrl: `https://flagcdn.com/w160/${country.flagCode.toLowerCase()}.png`
+          },
+          direction: direction,
+          size: amount,
+          leverage: leverage,
+          entryPrice: currentPrice,
+          markPrice: currentPrice,
+          openTime: new Date(),
+          fundingRate: 0.01,
+          nextFundingTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours from now
+          txHash: result.txHash,
+          unrealizedPnL: 0,
+          liquidationPrice: direction === 'long' 
+            ? currentPrice * (1 - 0.8 / leverage)
+            : currentPrice * (1 + 0.8 / leverage)
+        };
+
+        // Show position display
+        setCurrentPosition(positionData);
+        setShowPosition(true);
+
+        // ADD TRADE TO HISTORY
+        const now = new Date();
+        const time = now.toLocaleString('en-GB', {
+          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false
+        }).replace(',', '');
+        addTrade({
+          country: country.name,
+          countryCode: country.flagCode,
+          time,
+          entryPrice: `$${currentPrice}`,
+          marketPrice: `$${currentPrice}`,
+          pnl: {
+            amount: '$0',
+            percentage: '0.00',
+            isProfit: true,
+          },
+          status: 'Closed',
+        });
+
+        // Show success toast
+        toast({
+          title: "Trade Placed Successfully",
+          description: `Your ${direction} position has been opened.`,
+          variant: "default",
+        });
 
         // Set up polling to refresh positions while waiting for confirmation
-        // This helps in case the transaction monitoring in usePositionCreation fails
         let pollCount = 0;
-        const maxPolls = 10; // Try refreshing up to 10 times
-        const pollInterval = 8000; // Poll every 8 seconds
+        const maxPolls = 10;
+        const pollInterval = 8000;
 
-        // Get transaction hash and position ID from result safely
-        const txHash =
-          result.success && "txHash" in result
-            ? (result.txHash as string)
-            : undefined;
-        const positionId =
-          result.success && "position" in result && result.position
-            ? (result.position.id as string)
-            : undefined;
+        const pollForPositionUpdate = () => {
+          if (pollCount >= maxPolls) {
+            console.log("Polling completed after reaching maximum attempts");
+            return;
+          }
 
-        // Check if the store already has the positions to avoid unnecessary polling
-        const positionStore = usePositionStore.getState();
-        let positionExists = positionStore.positions.some(
-          (p) =>
-            p.country?.id === countryId &&
-            ((txHash && p.txHash === txHash) ||
-              (positionId && p.id === positionId))
-        );
+          pollingTimerRef.current = setTimeout(async () => {
+            console.log(`Polling for position update (${pollCount + 1}/${maxPolls})...`);
+            await refreshPositions();
+            pollCount++;
+            pollForPositionUpdate();
+          }, pollInterval);
+        };
 
-        if (positionExists) {
-          console.log("Position already exists in store, no need to poll");
-        } else {
-          const pollForPositionUpdate = () => {
-            if (pollCount >= maxPolls) {
-              console.log("Polling completed after reaching maximum attempts");
-              return;
-            }
-
-            pollingTimerRef.current = setTimeout(async () => {
-              console.log(
-                `Polling for position update (${pollCount + 1}/${maxPolls})...`
-              );
-
-              // Refresh positions from blockchain
-              await refreshPositions();
-
-              // Check if position exists now
-              const currentStore = usePositionStore.getState();
-              positionExists = currentStore.positions.some(
-                (p) =>
-                  p.country?.id === countryId &&
-                  ((txHash && p.txHash === txHash) ||
-                    (positionId && p.id === positionId))
-              );
-
-              if (positionExists) {
-                console.log(
-                  "Position detected through polling, stopping further polls"
-                );
-                return; // Stop polling since we found the position
-              }
-
-              pollCount++;
-              pollForPositionUpdate();
-            }, pollInterval);
-          };
-
-          // Start polling
-          pollForPositionUpdate();
-        }
+        // Start polling
+        pollForPositionUpdate();
 
         // Scroll to positions panel after a delay
         setTimeout(() => {
-          // Use setTimeout to ensure DOM is updated before scrolling
           document.getElementById("positions-panel")?.scrollIntoView({
             behavior: "smooth",
             block: "start",
           });
-        }, 1000); // Increased delay for better chance of positions being updated
+        }, 1000);
 
         return;
       }
 
       // Handle specific error codes
       if (result?.code === "USDC_APPROVAL_REQUIRED") {
-        // Handle USDC approval requirement
         setNeedsUSDCApproval(true);
         toast({
           title: "USDC Approval Required",
@@ -241,59 +470,17 @@ export default function CountryPage() {
         return;
       }
 
-      if (result?.code === "USER_REJECTED") {
-        // User rejected transaction in wallet - already handled by usePositionCreation
-        return;
-      }
-
       // For all other errors, show a toast
       toast({
         title: "Trade Failed",
-        description:
-          result?.error || "Failed to place trade. Please try again.",
+        description: result?.error || "Failed to place trade. Please try again.",
         variant: "destructive",
       });
     } catch (error: any) {
       console.error("Unhandled exception in handlePlaceTrade:", error);
-
-      // Check if it's a TransactionExecutionError from Viem
-      if (
-        error.name === "TransactionExecutionError" ||
-        (error.message && error.message.includes("TransactionExecutionError"))
-      ) {
-        // Show more detailed information for transaction errors
-        toast({
-          title: "Transaction Failed",
-          description:
-            "The blockchain rejected the transaction. Please try again later.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Handle user rejected errors that might have bubbled up
-      if (
-        error.code === 4001 ||
-        error.code === "ACTION_REJECTED" ||
-        error.name === "UserRejectedRequestError" ||
-        (error.message &&
-          (error.message.includes("User denied") ||
-            error.message.includes("user rejected") ||
-            error.message.includes("rejected by the user")))
-      ) {
-        toast({
-          title: "Transaction Cancelled",
-          description: "You cancelled the transaction in your wallet.",
-          variant: "default",
-        });
-        return;
-      }
-
-      // Default error handler
       toast({
         title: "Trade Failed",
-        description:
-          error.message || "Failed to place trade. Please try again.",
+        description: error.message || "Failed to place trade. Please try again.",
         variant: "destructive",
       });
     }
@@ -1065,18 +1252,28 @@ export default function CountryPage() {
             id="positions-panel"
             className="self-stretch p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5"
           >
-            <div className="self-stretch inline-flex justify-start items-center gap-4">
-              <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">
-                Positions
-              </div>
-            </div>
-            <CountryPositionsList
-              countryId={countryId}
-              currentPrice={currentPrice}
-            />
+            {showPosition && currentPosition ? (
+              <PositionDisplay 
+                position={currentPosition} 
+                onClose={() => setShowPosition(false)}
+              />
+            ) : (
+              <>
+                <div className="self-stretch inline-flex justify-start items-center gap-4">
+                  <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">
+                    Positions
+                  </div>
+                </div>
+                <CountryPositionsList
+                  countryId={countryId}
+                  currentPrice={currentPrice}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+
