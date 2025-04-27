@@ -15,8 +15,6 @@ BeTheNation is a crypto-based trading platform allowing users to take long or sh
 
 - **Frontend**: Next.js, React, TypeScript, Tailwind CSS
 - **Blockchain Integration**: Ethereum, Wagmi, Ethers.js
-- **Smart Contracts**: Solidity
-- **Development Tools**: Hardhat
 
 ## Features
 
@@ -32,7 +30,6 @@ BeTheNation is a crypto-based trading platform allowing users to take long or sh
 - Node.js (v18+)
 - npm or yarn
 - MetaMask or another Ethereum wallet
-- Alchemy API key
 - WalletConnect Project ID (for wallet integration)
 
 ## Installation
@@ -49,42 +46,6 @@ BeTheNation is a crypto-based trading platform allowing users to take long or sh
    ```
    npm install
    ```
-
-3. Create a `.env.local` file in the root directory using the template below:
-
-   ```
-   # Network URLs
-   SEPOLIA_RPC_URL=https://eth-sepolia.example.com/your-api-key
-
-   # Account private keys (without 0x prefix)
-   PRIVATE_KEY=your_private_key_here_without_0x_prefix
-
-   # Frontend environment variables
-   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id_here
-   NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_key_here
-
-   # Optional: Etherscan API Key for contract verification
-   ETHERSCAN_API_KEY=your_etherscan_api_key_here
-   ```
-
-## Smart Contract Deployment
-
-If you need to deploy the smart contract:
-
-1. Compile the contract:
-
-   ```
-   npx hardhat compile
-   ```
-
-2. Deploy to Sepolia testnet:
-
-   ```
-   npx hardhat run scripts/deploy.ts --network sepolia
-   ```
-
-3. Update contract address in your configuration if needed.
-
 ## Development
 
 Start the development server:
