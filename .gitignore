@@ -43,3 +43,5 @@ SC/broadcast/
 !SC/broadcast/*/31337/
 !SC/broadcast/*/1337/
 !SC/broadcast/**/dry-run/
+
+package-lock.json

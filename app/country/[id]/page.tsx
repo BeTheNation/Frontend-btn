@@ -4,20 +4,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { useCountryData } from "@/hooks/useCountryData";
 import { useWeb3 } from "@/hooks/useWeb3";
 import { CountryPositionsList } from "@/components/trading/CountryPositionsList";
-import { useContract } from "@/hooks/useContract";
 import { useToast } from "@/components/ui/use-toast";
 import { usePositionCreation } from "@/hooks/usePositionCreation";
-import { USDCApproval } from "@/components/ui/usdc-approval";
-import { motion, AnimatePresence } from "framer-motion";
 import { useCountryPositions } from "@/hooks/useCountryPositions";
-import { usePositionStore } from "@/store/positionStore";
 import { PositionDisplay } from "@/components/trading/PositionDisplay";
 import { useTradeHistoryStore } from '@/store/tradeHistoryStore';
 
@@ -391,7 +382,7 @@ export default function CountryPage() {
           nextFundingTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours from now
           txHash: result.txHash,
           unrealizedPnL: 0,
-          liquidationPrice: direction === 'long' 
+          liquidationPrice: direction === 'long'
             ? currentPrice * (1 - 0.8 / leverage)
             : currentPrice * (1 + 0.8 / leverage)
         };
@@ -837,20 +828,17 @@ export default function CountryPage() {
             <div className="self-stretch px-2.5 py-2 bg-[#2d2d2e] rounded-[100px] flex">
               <div className="self-stretch h-[61px] flex-1 flex items-center relative">
                 <div
-                  className={`absolute inset-0 transition-all duration-300 ease-in-out flex ${
-                    direction === "long" ? "justify-start" : "justify-end"
-                  }`}
+                  className={`absolute inset-0 transition-all duration-300 ease-in-out flex ${direction === "long" ? "justify-start" : "justify-end"
+                    }`}
                 >
                   <div
-                    className={`h-full w-1/2 ${
-                      direction === "long" ? "bg-[#16b264]" : "bg-[#FF4B4B]"
-                    } rounded-[100px] shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)]`}
+                    className={`h-full w-1/2 ${direction === "long" ? "bg-[#16b264]" : "bg-[#FF4B4B]"
+                      } rounded-[100px] shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)]`}
                   />
                 </div>
                 <div
-                  className={`flex-1 z-10 px-[18.86px] py-[15px] flex justify-center items-center gap-[18.86px] cursor-pointer transition-colors duration-300 ${
-                    direction === "long" ? "text-white" : "text-[#545454]"
-                  }`}
+                  className={`flex-1 z-10 px-[18.86px] py-[15px] flex justify-center items-center gap-[18.86px] cursor-pointer transition-colors duration-300 ${direction === "long" ? "text-white" : "text-[#545454]"
+                    }`}
                   onClick={() => setDirection("long")}
                 >
                   <div className="flex items-center gap-2">
@@ -872,9 +860,8 @@ export default function CountryPage() {
                   </div>
                 </div>
                 <div
-                  className={`flex-1 z-10 px-[18.86px] py-[15px] flex justify-center items-center gap-[18.86px] cursor-pointer transition-colors duration-300 ${
-                    direction === "short" ? "text-white" : "text-[#545454]"
-                  }`}
+                  className={`flex-1 z-10 px-[18.86px] py-[15px] flex justify-center items-center gap-[18.86px] cursor-pointer transition-colors duration-300 ${direction === "short" ? "text-white" : "text-[#545454]"
+                    }`}
                   onClick={() => setDirection("short")}
                 >
                   <div className="flex items-center gap-2">
@@ -930,9 +917,8 @@ export default function CountryPage() {
                     onChange={(e) =>
                       setAmount(Math.max(0, parseFloat(e.target.value) || 0))
                     }
-                    className={`flex-1 bg-transparent text-left outline-none border-none ${
-                      isAmountValid ? "text-white" : "text-red-500"
-                    } text-xl font-bold font-['Inter'] leading-tight`}
+                    className={`flex-1 bg-transparent text-left outline-none border-none ${isAmountValid ? "text-white" : "text-red-500"
+                      } text-xl font-bold font-['Inter'] leading-tight`}
                   />
                   <div className="text-[#d6d6d6] text-xl font-bold font-['Inter'] leading-tight">
                     nUSDC
@@ -960,11 +946,10 @@ export default function CountryPage() {
                         style={{ left: `${((value - 1) / 4) * 100}%` }}
                       >
                         <div
-                          className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                            value <= leverage
+                          className={`w-2 h-2 rounded-full transition-all duration-200 ${value <= leverage
                               ? "bg-white shadow-[0_0_8px_rgba(21,93,238,0.5)]"
                               : "bg-[#404040]"
-                          }`}
+                            }`}
                         />
                       </div>
                     ))}
@@ -1050,21 +1035,19 @@ export default function CountryPage() {
                   </div>
                 </div>
                 <button
-                  className={`self-stretch h-[60px] px-4 py-2 ${
-                    isConnected &&
-                    isAmountValid &&
-                    !isProcessing &&
-                    !needsUSDCApproval
+                  className={`self-stretch h-[60px] px-4 py-2 ${isConnected &&
+                      isAmountValid &&
+                      !isProcessing &&
+                      !needsUSDCApproval
                       ? "bg-[#155dee]"
                       : "bg-gray-600"
-                  } rounded-[100px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.12)] inline-flex justify-center items-center gap-1 ${
-                    !isConnected ||
-                    !isAmountValid ||
-                    isProcessing ||
-                    needsUSDCApproval
+                    } rounded-[100px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.12)] inline-flex justify-center items-center gap-1 ${!isConnected ||
+                      !isAmountValid ||
+                      isProcessing ||
+                      needsUSDCApproval
                       ? "cursor-not-allowed"
                       : ""
-                  }`}
+                    }`}
                   disabled={
                     !isConnected ||
                     !isAmountValid ||
@@ -1077,12 +1060,12 @@ export default function CountryPage() {
                     {!isConnected
                       ? "Connect Wallet to Trade"
                       : !isAmountValid
-                      ? "Insufficient Balance"
-                      : isProcessing
-                      ? "Processing..."
-                      : needsUSDCApproval
-                      ? "Approve USDC First"
-                      : "Place Trade"}
+                        ? "Insufficient Balance"
+                        : isProcessing
+                          ? "Processing..."
+                          : needsUSDCApproval
+                            ? "Approve USDC First"
+                            : "Place Trade"}
                   </div>
                 </button>
               </div>
@@ -1253,8 +1236,8 @@ export default function CountryPage() {
             className="self-stretch p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5"
           >
             {showPosition && currentPosition ? (
-              <PositionDisplay 
-                position={currentPosition} 
+              <PositionDisplay
+                position={currentPosition}
                 onClose={() => setShowPosition(false)}
               />
             ) : (

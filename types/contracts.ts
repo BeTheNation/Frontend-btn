@@ -4,7 +4,7 @@ interface BaseContract {
   [key: string]: any;
 }
 
-import type { Address } from "./abitype";
+export type Address = `0x${string}`;
 
 // Interface for the PredictionMarket contract
 export interface PredictionMarketAbi extends BaseContract {

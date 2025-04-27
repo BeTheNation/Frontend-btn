@@ -1,21 +1,14 @@
 "use client";
 
 import {
-  PREDICTION_MARKET_ABI,
   getContractAddress,
-  formatMarginAmount,
-  formatTPSL,
-  validateOpenPositionParams,
   validateContractAddress,
   getUSDCAddress,
-  approveUSDC,
 } from "@/lib/contracts/PredictionMarket";
 import { toast } from "@/components/ui/use-toast";
 import { parseEther } from "viem";
 import {
   handleError,
-  handleValidationError,
-  debugContractFunctionExecutionError,
 } from "@/lib/error-handler";
 
 /**
