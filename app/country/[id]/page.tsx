@@ -14,7 +14,7 @@ import {
 } from "wagmi";
 import { parseUnits } from "viem";
 
-import {  
+import {
   USDC_ADDRESSES,
   USDC_ABI,
   MockUSDC_ABI,
@@ -489,7 +489,7 @@ export default function CountryPage() {
   const { address } = useAccount();
   const { data: walletBalance, refetch: refetchBalance } = useBalance({
     address,
-    token: "0x2904921988f84BBD764D585e6f0249869FDEb25C",
+    token: "0xb8e29BB907E0cb9aBfbAa9233EfE44dF07364a2A",
   });
 
   const { triggerRefresh } = usePositionsStore();
@@ -556,13 +556,9 @@ export default function CountryPage() {
         throw new Error("Wallet not connected");
       }
 
-      const decimals = 6;
+      const decimals = 6; // USDC decimals
 
-      // const sizeInWei = parseEther(
-      //   (Number(position.size) * Number(position.leverage)).toString(),
-      //   decimals
-      // );
-
+      // Use parseUnits for USDC
       const sizeInWei = parseUnits(
         (Number(position.size) * Number(position.leverage)).toString(),
         decimals
@@ -586,12 +582,12 @@ export default function CountryPage() {
         pnl: {
           amount: "$0.00",
           percentage: "0.0",
-          isProfit: true,
+          isProfit: true,  token: "0x2904921988f84BBD764D585e6f0249869FDEb25C",
         },
         status: "Open",
       });
 
-      // 1. Approve contract to use token
+      // 1. Approve contract to use USDC
       const approvalTx = await writeContract({
         address: USDC_ADDRESSES[50002],
         abi: USDC_ABI,
@@ -671,38 +667,24 @@ export default function CountryPage() {
 
   return (
     <>
-      <div className="container mx-auto p-6 bg-[#111214] min-h-screen">
-        {/* Back to Dashboard button */}
-        <Link href="/dashboard" className="block mb-8">
-          <div className="inline-flex justify-start items-center gap-[23px]">
-            <div className="w-[58px] h-[58px] p-[9.67px] bg-[#1d1f22] rounded-[9.67px] flex justify-center items-center">
-              <svg
-                width="24.72"
-                height="42.9"
-                viewBox="0 0 40 40"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="scale-[1.2]"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M14.0274 21.1391C13.7253 20.8369 13.5557 20.4272 13.5557 20C13.5557 19.5728 13.7253 19.1631 14.0274 18.8609L23.1414 9.74689C23.2901 9.59301 23.4678 9.47027 23.6644 9.38584C23.861 9.3014 24.0724 9.25696 24.2863 9.2551C24.5002 9.25324 24.7124 9.294 24.9104 9.37501C25.1084 9.45602 25.2882 9.57565 25.4395 9.72692C25.5908 9.87819 25.7104 10.0581 25.7914 10.2561C25.8724 10.4541 25.9132 10.6662 25.9113 10.8801C25.9095 11.0941 25.865 11.3055 25.7806 11.502C25.6962 11.6986 25.5734 11.8764 25.4195 12.025L17.4445 20L25.4195 27.975C25.713 28.2789 25.8754 28.6858 25.8717 29.1083C25.8681 29.5307 25.6986 29.9348 25.3999 30.2335C25.1012 30.5322 24.6971 30.7016 24.2747 30.7053C23.8523 30.709 23.4453 30.5466 23.1414 30.2531L14.0274 21.1391Z"
-                  fill="white"
-                />
-              </svg>
+      <div className="container mx-auto p-2 sm:p-6 bg-[#111214] min-h-screen">
+        {/* Back to Dashboard button - more compact on mobile */}
+        <Link href="/dashboard" className="block mb-4 sm:mb-8">
+          <div className="inline-flex justify-start items-center gap-2 sm:gap-[23px]">
+            <div className="w-[40px] h-[40px] sm:w-[58px] sm:h-[58px] p-2 sm:p-[9.67px] bg-[#1d1f22] rounded-[9.67px] flex justify-center items-center">
+              {/* ... existing back arrow SVG ... */}
             </div>
-            <div className="text-right justify-start text-[#d6d6d6] text-xl font-medium font-['Inter'] leading-tight">
+            <div className="text-right justify-start text-[#d6d6d6] text-base sm:text-xl font-medium font-['Inter'] leading-tight">
               Back To Dashboard
             </div>
           </div>
         </Link>
 
-        <div className="space-y-6">
-          {/* Header Panel */}
-          <div className="flex items-center justify-between gap-6 px-9 py-[18.86px] bg-[#1d1f22] rounded-xl shadow-[0px_0.7857142686843872px_1.5714285373687744px_0px_rgba(16,24,40,0.06)] shadow-[0px_0.7857142686843872px_2.357142925262451px_0px_rgba(16,24,40,0.10)] outline outline-[0.79px] outline-offset-[-0.79px] outline-[#323232] transition-all duration-200 hover:shadow-lg">
+        <div className="space-y-4 sm:space-y-6">
+          {/* Country Header Panel */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-8 px-3 sm:px-9 py-3 sm:py-[18.86px] bg-[#1d1f22] rounded-xl shadow-[0px_0.7857142686843872px_1.5714285373687744px_0px_rgba(16,24,40,0.06)] shadow-[0px_0.7857142686843872px_2.357142925262451px_0px_rgba(16,24,40,0.10)] outline outline-[0.79px] outline-offset-[-0.79px] outline-[#323232] transition-all duration-200 hover:shadow-lg">
             {/* Flag Section */}
-            <div className="flex-shrink-0 w-[62.29px] h-[62.29px] relative">
+            <div className="flex-shrink-0 w-12 h-12 sm:w-[62.29px] sm:h-[62.29px] relative">
               <div className="absolute inset-0 rounded-full overflow-hidden bg-[#d7d7d7]">
                 <Image
                   src={`https://flagcdn.com/w160/${country.flagCode.toLowerCase()}.png`}
@@ -715,18 +697,18 @@ export default function CountryPage() {
               </div>
             </div>
 
-            {/* Country Info Section */}
-            <div className="flex flex-col gap-[13px] flex-grow">
-              <div className="text-white text-[25.14px] font-medium font-['Inter'] leading-snug">
+            {/* Country Info */}
+            <div className="flex flex-col gap-2 sm:gap-[13px] flex-grow">
+              <div className="text-white text-lg sm:text-[25.14px] font-medium font-['Inter'] leading-snug">
                 {country.name}
               </div>
-              <div className="text-[#70e000] text-xl font-medium font-['Inter'] leading-snug">
+              <div className="text-[#70e000] text-base sm:text-xl font-medium font-['Inter'] leading-snug">
                 {country.countryScore}
               </div>
             </div>
 
             {/* Stats Section */}
-            <div className="flex flex-1 justify-end gap-8">
+            <div className="flex flex-col sm:flex-row flex-1 justify-center gap-2 sm:gap-8 w-full">
               {/* Open Trades */}
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-[#ffe5664D] rounded-[100px] flex items-center justify-center">
@@ -856,9 +838,10 @@ export default function CountryPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Chart Panel */}
-            <div className="md:col-span-2 w-full h-[520px] p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 overflow-hidden transition-all duration-200 hover:shadow-lg">
+          {/* Grid Layout - Stack on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            {/* Chart Panel - Full width on mobile */}
+            <div className="md:col-span-2 w-full h-[400px] sm:h-[520px] p-3 sm:p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 overflow-hidden transition-all duration-200 hover:shadow-lg">
               <div className="self-stretch inline-flex justify-between items-center">
                 <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">
                   Live Countryscore
@@ -941,18 +924,18 @@ export default function CountryPage() {
 
                     <div className="self-stretch px-6 inline-flex justify-between items-center">
                       {[
-                        "28 April",
-                        "29 April",
-                        "30 April",
-                        "1 May",
-                        "2 May",
-                        "3 May",
-                        "4 May",
-                        "5 May",
-                        "6 May",
-                        "7 May",
-                        "8 May",
-                        "9 May",
+                        // "28 April",
+                        // "29 April",
+                        // "30 April",
+                        // "1 May",
+                        // "2 May",
+                        // "3 May",
+                        // "4 May",
+                        // "5 May",
+                        // "6 May",
+                        // "7 May",
+                        // "8 May",
+                        // "9 May",
                       ].map((date) => (
                         <div
                           key={date}
@@ -999,8 +982,8 @@ export default function CountryPage() {
               </div>
             </div>
 
-            {/* Trading Panel */}
-            <div className="self-stretch p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-6 transition-all duration-200 hover:shadow-lg">
+            {/* Trading Panel - Full width on mobile */}
+            <div className="self-stretch p-3 sm:p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-6 transition-all duration-200 hover:shadow-lg">
               <div className="self-stretch px-2.5 py-2 bg-[#2d2d2e] rounded-[100px] flex">
                 <div className="self-stretch h-[61px] flex-1 flex items-center relative">
                   <div
@@ -1094,18 +1077,15 @@ export default function CountryPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="self-stretch h-[63px] px-[22px] py-1.5 bg-[#2d2e2e] rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] inline-flex justify-end items-center gap-1">
+                  <div className="self-stretch h-[63px] px-3 sm:px-[22px] py-1.5 bg-[#2d2e2e] rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] inline-flex justify-end items-center gap-1">
                     <input
-                      type="number"
+                      type="number" 
                       value={position.size}
-                      onChange={(e) =>
-                        setPosition({ ...position, size: e.target.value })
-                      }
-                      className={`flex-1 bg-transparent text-left outline-none border-none ${
-                        position.size ? "text-white" : "text-red-500"
-                      } text-xl font-bold font-['Inter'] leading-tight`}
+                      onChange={(e) => setPosition({ ...position, size: e.target.value })}
+                      className="flex-1 bg-transparent text-left outline-none border-none text-white text-base sm:text-xl font-bold font-['Inter'] leading-tight w-full min-w-0"
+                      placeholder="Enter amount"
                     />
-                    <div className="text-[#d6d6d6] text-xl font-bold font-['Inter'] leading-tight">
+                    <div className="text-[#d6d6d6] text-base sm:text-xl font-bold font-['Inter'] leading-tight whitespace-nowrap">
                       USDC
                     </div>
                   </div>
@@ -1250,10 +1230,10 @@ export default function CountryPage() {
           </div>
         </div>
 
-        {/* Bottom Panels */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        {/* Bottom Grid - Stack on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
           {/* About Panel */}
-          <div className="self-stretch p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 transition-all duration-200 hover:shadow-lg">
+          <div className="self-stretch p-3 sm:p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 transition-all duration-200 hover:shadow-lg">
             <div className="self-stretch inline-flex justify-start items-center gap-4">
               <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">
                 About
@@ -1279,7 +1259,7 @@ export default function CountryPage() {
           </div>
 
           {/* Leaderboard Panel */}
-          <div className="self-stretch h-[407px] p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 transition-all duration-200 hover:shadow-lg">
+          <div className="self-stretch h-auto sm:h-[407px] p-3 sm:p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5 transition-all duration-200 hover:shadow-lg">
             <div className="self-stretch inline-flex justify-start items-center gap-4">
               <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">
                 Leaderboard
@@ -1409,7 +1389,7 @@ export default function CountryPage() {
           {/* Positions Panel */}
           <div
             id="positions-panel"
-            className="self-stretch p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5"
+            className="self-stretch p-3 sm:p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-5"
           >
             <div className="self-stretch inline-flex justify-start items-center gap-4">
               <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-7">
@@ -1542,7 +1522,7 @@ export default function CountryPage() {
                           <span className="text-gray-400">Position</span>
                           <span className="text-white">
                             {country.name} {position.isLong ? "LONG" : "SHORT"}
-                          </span>
+                            </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Size</span>

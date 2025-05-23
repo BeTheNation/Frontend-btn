@@ -4,8 +4,6 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CountryCard from "@/components/dashboard/CountryCard";
 import HistoryTable from "@/components/dashboard/HistoryTable";
-import Link from "next/link";
-import FaucetContent from "@/components/dashboard/FaucetContent";
 
 export type CountryData = {
   id: string;
@@ -169,86 +167,67 @@ export default function TradingPlatform() {
     <div className="min-h-screen bg-[#111214] text-white">
       {/* Header with Tabs and Search */}
       <div className="p-6 bg-[#111214]">
-        <div className="self-stretch inline-flex justify-between items-center w-full">
-          <div className="px-2 py-[7px] rounded-[100px] outline outline-2 outline-offset-[-2px] outline-[#1d1f22] flex justify-start items-center gap-2.5">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
+          {/* Tab Navigation */}
+          <div className="flex gap-2 w-full md:w-auto">
             <motion.button
               onClick={() => setActiveTab("discover")}
-              className={`h-[63px] px-6 py-1.5 ${
+              className={`h-10 md:h-[63px] px-4 md:px-6 py-1.5 ${
                 activeTab === "discover" ? "bg-[#262a33]" : ""
-              } rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] flex justify-start items-center gap-4 flex-wrap content-center`}
+              } rounded-[100px] flex items-center`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
             >
-              <div
-                className={`justify-start ${
+              <span
+                className={`text-base md:text-xl ${
                   activeTab === "discover" ? "text-white" : "text-[#505050]"
-                } text-xl font-normal font-['Inter'] leading-tight`}
+                }`}
               >
                 Discover
-              </div>
+              </span>
             </motion.button>
             <motion.button
               onClick={() => setActiveTab("history")}
-              className={`h-[63px] px-6 py-1.5 ${
+              className={`h-10 md:h-[63px] px-4 md:px-6 py-1.5 ${
                 activeTab === "history" ? "bg-[#262a33]" : ""
-              } rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] flex justify-start items-center gap-4 flex-wrap content-center`}
+              } rounded-[100px] flex items-center`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
             >
-              <div
-                className={`justify-start ${
+              <span
+                className={`text-base md:text-xl ${
                   activeTab === "history" ? "text-white" : "text-[#505050]"
-                } text-xl font-normal font-['Inter'] leading-tight`}
+                }`}
               >
                 History
-              </div>
+              </span>
             </motion.button>
           </div>
-          <AnimatePresence>
-            {activeTab === "discover" && (
-              <motion.div
-                className="flex justify-end"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+          {/* Search Bar */}
+          {activeTab === "discover" && (
+            <div className="w-full max-w-md h-12 md:h-[48px] bg-[#1d1f22] rounded-full flex items-center px-4 gap-3">
+              <svg
+                className="w-5 h-5 text-[#d6d6d6] flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
               >
-                <div className="w-[445px] h-[63px] px-6 py-1.5 bg-[#1d1f22] rounded-full shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] flex items-center gap-4 relative">
-                  <div className="w-[34px] h-[34px] relative overflow-hidden flex-shrink-0">
-                    <svg
-                      className="w-[27.07px] h-[27.07px] absolute left-[2.83px] top-[2.83px]"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
-                        stroke="#D6D6D6"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-transparent text-[#d6d6d6] text-xl font-normal font-['Inter'] leading-tight focus:outline-none"
-                    />
-                    {!searchTerm && (
-                      <div className="absolute inset-0 pointer-events-none text-[#d6d6d6] text-xl font-normal font-['Inter'] leading-tight">
-                        Search countries
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-4.35-4.35M19 11a8 8 0 11-16 0 8 8 0 0116 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 bg-transparent text-[#d6d6d6] placeholder-[#888] text-base md:text-lg focus:outline-none"
+                placeholder="Search countries"
+              />
+            </div>
+          )}
         </div>
       </div>
 
