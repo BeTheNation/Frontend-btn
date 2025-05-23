@@ -10,10 +10,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PositionsProvider } from "@/components/trading/PositionsContext";
 
 // Replace the hardcoded projectId with:
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+let projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+
 
 if (!projectId) {
-  throw new Error('WalletConnect Project ID is required');
+  console.warn('WalletConnect Project ID tidak ditemukan');
+  projectId = "93bd6adc806e23fb5f54c3a66744c9e4";
 }
 
 const { chains, publicClient } = configureChains([baseGoerli], [publicProvider()]);
