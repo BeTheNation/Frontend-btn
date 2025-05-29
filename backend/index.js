@@ -75,16 +75,13 @@ app.use((req, res) => {
 
 mongoose.connect(mongoUri)
   .then(() => {
-<<<<<<< Updated upstream
+    // Fix: Define ctx variable and use correct port
+    const ctx = 'mongodb';
     logger.log(ctx, "Connected to MongoDB", 'initate db');
 
-    const server = app.listen(process.env.PORT, () => {
-      logger.log(ctx, `Server running on port ${port}`, 'initate application');
-=======
-    logger.log('express', 'Connected to MongoDB', 'info');
     app.listen(port, () => {
-      logger.log('express', `Server is running on port ${port}`, 'info');
->>>>>>> Stashed changes
+      const ctx = 'express';
+      logger.log(ctx, `Server running on port ${port}`, 'initate application');
     });
   })
   .catch((err) => {

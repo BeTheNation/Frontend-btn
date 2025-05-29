@@ -1,4 +1,3 @@
-const CountryMetric = require('../models/CountryMetric');
 const FinalScore = require('../models/FinalScore');
 const logger = require('../../bin/helper/logger');
 
@@ -46,12 +45,21 @@ function mapRiskToSentiment(risk) {
 
 async function calculateMetricsForCountry(finalScore, countryCode) {
     try {
+        if (!finalScore) {
+            throw new Error('Final score is required');
+        }
+
         if (!COUNTRY_DATA[countryCode]) {
             throw new Error(`Country ${countryCode} not found in COUNTRY_DATA`);
         }
 
         const countryInfo = COUNTRY_DATA[countryCode];
-        
+               
+        // Validate required fields
+        if (!finalScore.risk_assessment || !finalScore.risk_assessment.overall_risk) {
+            throw new Error('Invalid final score data structure');
+        }
+
         // Use final score if available, otherwise use default values
         const countryScore = finalScore?.final_score ? 
             Math.round(finalScore.final_score * 20) : 
@@ -60,7 +68,11 @@ async function calculateMetricsForCountry(finalScore, countryCode) {
         const trend = finalScore?.short_term_score && finalScore?.long_term_score ? 
             (finalScore.short_term_score >= finalScore.long_term_score ? 'up' : 'down') : 
             'neutral';
-        const changePercent = ((finalScore.short_term_score - finalScore.long_term_score) / finalScore.long_term_score * 100).toFixed(1);
+
+        // Add validation for division by zero
+        const changePercent = finalScore.long_term_score !== 0 ? 
+            ((finalScore.short_term_score - finalScore.long_term_score) / finalScore.long_term_score * 100).toFixed(1) :
+            '0.0';
 
         // Calculate dynamic values based on score
         const volumeMultiplier = countryScore / 1000;
@@ -92,12 +104,17 @@ async function calculateMetricsForCountry(finalScore, countryCode) {
     }
 }
 
+// Improve error handling in getLatestMetrics
 async function getLatestMetrics() {
     try {
-        const latestScore = await FinalScore.findOne().sort({ timestamp: -1 });
+        
+        const latestScore = await FinalScore.findOne()
+            .sort({ timestamp: -1 })
+            .lean() // Add lean() for better performance
+            .exec();
         
         if (!latestScore) {
-            throw new Error('No final score available');
+            return []; // Return empty array instead of throwing error
         }
 
         // Generate metrics for ID and US first
@@ -124,15 +141,24 @@ async function getLatestMetrics() {
     }
 }
 
+// Improve error handling in getCountryMetrics
 async function getCountryMetrics(countryCode) {
     try {
+        if (!countryCode) {
+            throw new Error('Country code is required');
+        }
+
         if (!COUNTRY_DATA[countryCode]) {
             throw new Error(`Country ${countryCode} not supported`);
         }
 
-        const latestScore = await FinalScore.findOne().sort({ timestamp: -1 });
+        const latestScore = await FinalScore.findOne()
+            .sort({ timestamp: -1 })
+            .lean()
+            .exec();
+
         if (!latestScore) {
-            throw new Error('No final score available');
+            return null; // Return null for not found
         }
 
         return await calculateMetricsForCountry(latestScore, countryCode);
