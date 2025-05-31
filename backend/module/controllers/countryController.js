@@ -3,6 +3,7 @@ const axios = require("axios");
 const logger = require('../../bin/helper/logger');
 const ctx = 'country-controller';
 const countryService = require("../services/countryService");
+const countryMetricService = require("../services/countryMetricService");
 
 // Fetch and cache countries from restcountries.com
 async function fetchAndCacheCountries() {
@@ -49,8 +50,49 @@ async function getAllCountries(req, res) {
     }
 }
 
+// GET /api/countries - Get all countries with latest metrics
+async function getAllCountriesWithMetrics(req, res) {
+    try {
+        const countries = await countryMetricService.getLatestMetricsForAllCountries();
+        res.json({
+            status: true,
+            message: "Countries with metrics retrieved successfully",
+            data: countries,
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        logger.log(ctx, err.message, 'getAllCountriesWithMetrics-error');
+        res.status(500).json({
+            status: false,
+            message: "Error retrieving countries with metrics",
+            error: err.message
+        });
+    }
+}
+
+// POST /api/countries/generate-metrics - Generate initial mock metrics
+async function generateInitialMetrics(req, res) {
+    try {
+        const result = await countryMetricService.generateMockMetrics();
+        res.json({
+            status: true,
+            message: "Initial metrics generated successfully",
+            count: result.length
+        });
+    } catch (err) {
+        logger.log(ctx, err.message, 'generateInitialMetrics-error');
+        res.status(500).json({
+            status: false,
+            message: "Error generating initial metrics",
+            error: err.message
+        });
+    }
+}
+
 module.exports = {
     getCountryByCode,
     fetchAndCacheCountries,
-    getAllCountries
+    getAllCountries,
+    getAllCountriesWithMetrics,
+    generateInitialMetrics
 };

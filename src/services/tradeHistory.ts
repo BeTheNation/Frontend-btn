@@ -4,7 +4,7 @@ export const fetchTradeHistory = async (userId: string): Promise<TradeHistoryRes
     try {
         // console.log('Making API request to:', `https://backend.mrfql.my.id/api/v1/trade-history/${userId}`);
 
-        const response = await fetch(`localhost:1000/api/v1/trade-history/663fabc9e25a4f7e9e2d4b55`, {
+        const response = await fetch(`http://localhost:1000/api/v1/trade-history/663fabc9e25a4f7e9e2d4b55`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
