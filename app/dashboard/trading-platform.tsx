@@ -23,9 +23,14 @@ export type CountryData = {
 
 export default function TradingPlatform() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"discover" | "history">("discover");
+  const [activeTab, setActiveTab] = useState<"discover" | "history">(
+    "discover"
+  );
   const rpcUrl = RPC_URL;
-  const { data, error, isLoading } = useSWR(`${rpcUrl}/api/v1/metrics/cards`, fetcher);
+  const { data, error, isLoading } = useSWR(
+    `${rpcUrl}/api/v1/metrics/cards`,
+    fetcher
+  );
 
   const countryData: CountryData[] = useMemo(() => {
     if (!data?.data) return [];
@@ -37,7 +42,12 @@ export default function TradingPlatform() {
       countryScore: item.countryScore || 0,
       volume24h: item.volume24h || "N/A",
       indexPrice: item.indexPrice || "N/A",
-      sentiment: item.changePercent > 0 ? "Bullish" : item.changePercent < 0 ? "Bearish" : "Neutral",
+      sentiment:
+        item.changePercent > 0
+          ? "Bullish"
+          : item.changePercent < 0
+          ? "Bearish"
+          : "Neutral",
       changePercent: item.changePercent || 0,
       trend: item.changePercent >= 0 ? "up" : "down",
       status: item.status === "COMING SOON" ? "COMING SOON" : "ACTIVE",
@@ -87,30 +97,34 @@ export default function TradingPlatform() {
           <div className="px-2 py-2 rounded-[100px] outline outline-2 outline-offset-[-2px] outline-[#1d1f22] flex justify-start items-center gap-2.5 w-full md:w-auto">
             <motion.button
               onClick={() => setActiveTab("discover")}
-              className={`h-12 md:h-[63px] px-4 md:px-6 py-1.5 ${activeTab === "discover" ? "bg-[#262a33]" : ""
-                } rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] flex justify-center items-center gap-4 flex-1 md:flex-none`}
+              className={`h-12 md:h-[63px] px-4 md:px-6 py-1.5 ${
+                activeTab === "discover" ? "bg-[#262a33]" : "hover:bg-[#1d1f22]"
+              } rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] flex justify-center items-center gap-4 flex-1 md:flex-none cursor-pointer`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
             >
               <div
-                className={`${activeTab === "discover" ? "text-white" : "text-[#505050]"
-                  } text-base md:text-xl font-normal font-['Inter'] leading-tight`}
+                className={`${
+                  activeTab === "discover" ? "text-white" : "text-[#505050]"
+                } text-base md:text-xl font-normal font-['Inter'] leading-tight`}
               >
                 Discover
               </div>
             </motion.button>
             <motion.button
               onClick={() => setActiveTab("history")}
-              className={`h-12 md:h-[63px] px-4 md:px-6 py-1.5 ${activeTab === "history" ? "bg-[#262a33]" : ""
-                } rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] flex justify-center items-center gap-4 flex-1 md:flex-none`}
+              className={`h-12 md:h-[63px] px-4 md:px-6 py-1.5 ${
+                activeTab === "history" ? "bg-[#262a33]" : "hover:bg-[#1d1f22]"
+              } rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] flex justify-center items-center gap-4 flex-1 md:flex-none cursor-pointer`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
             >
               <div
-                className={`${activeTab === "history" ? "text-white" : "text-[#505050]"
-                  } text-base md:text-xl font-normal font-['Inter'] leading-tight`}
+                className={`${
+                  activeTab === "history" ? "text-white" : "text-[#505050]"
+                } text-base md:text-xl font-normal font-['Inter'] leading-tight`}
               >
                 History
               </div>
@@ -178,9 +192,10 @@ export default function TradingPlatform() {
                     {/* Country Card */}
                     <div
                       className={`
-                        ${country.status === "COMING SOON"
-                          ? "pointer-events-none cursor-not-allowed"
-                          : "cursor-pointer"
+                        ${
+                          country.status === "COMING SOON"
+                            ? "pointer-events-none cursor-not-allowed"
+                            : ""
                         }
                       `}
                     >
@@ -190,7 +205,7 @@ export default function TradingPlatform() {
                     {/* Coming Soon Overlay */}
                     {country.status === "COMING SOON" && (
                       <motion.div
-                        className="absolute inset-0 bg-black/70 backdrop-blur-sm rounded-[30px] flex items-center justify-center z-10"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-[2.2px] rounded-[30px] flex items-center justify-center z-10"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.3 }}
@@ -226,7 +241,9 @@ export default function TradingPlatform() {
               ) : (
                 <div className="col-span-full text-center py-12">
                   <p className="text-[#888] text-lg">
-                    {searchTerm ? "No countries found matching your search." : "No countries available."}
+                    {searchTerm
+                      ? "No countries found matching your search."
+                      : "No countries available."}
                   </p>
                 </div>
               )}
@@ -245,7 +262,6 @@ export default function TradingPlatform() {
           )}
         </AnimatePresence>
       </div>
-
     </div>
   );
 }
