@@ -165,6 +165,15 @@ export default function CountryPage() {
         entryPrice: 120,
       });
       setShowPosition(true);
+      const tradeData = {
+        countryId: id,
+        userAddress: address,
+        isOnTrade: true,
+      };
+      localStorage.setItem(
+        `BeTheNation-${id}-${address}`,
+        JSON.stringify(tradeData)
+      );
 
       document
         .querySelector("#positions-panel")
@@ -311,7 +320,6 @@ export default function CountryPage() {
       setTimeout(() => setTransactionStep("idle"), 3000);
     }
   };
-
   const isProcessing = isPending || isConfirming;
 
   const handleCloseStepContinue = async () => {
@@ -346,6 +354,7 @@ export default function CountryPage() {
       setCloseStep(99); // Go to history table
     } else if (closeStep === 99) {
       setShowPosition(false);
+      localStorage.removeItem(`BeTheNation-${id}-${address}`);
       setCloseStep(null); // Close the entire flow
     }
   };
@@ -353,6 +362,11 @@ export default function CountryPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
+    const storedValue = localStorage.getItem(`BeTheNation-${id}-${address}`);
+    const tradeData = storedValue ? JSON.parse(storedValue) : false;
+    if (tradeData.countryId === id && tradeData.userAddress === address) {
+      setShowPosition(tradeData.isOnTrade);
+    }
   }, []);
 
   if (isLoading) {

@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -9,6 +11,13 @@ import {
   Calendar,
   ExternalLink,
 } from "lucide-react";
+import { fetcher } from "@/src/services/fetcher";
+import useSWR from "swr";
+import { useParams } from "next/navigation";
+import { RPC_URL } from "@/lib/contracts/constants";
+import Link from "next/link";
+
+// https://backendd.betheback.my.id/api/v1/country/ID/trade
 
 const CollapsibleSection = ({
   title,
@@ -49,64 +58,51 @@ const CollapsibleSection = ({
 };
 
 const NewsSection = () => {
-  const newsItems = [
-    {
-      id: 1,
-      title: "Major DeFi Protocol Launches New Yield Farming Program",
-      summary:
-        "A leading decentralized finance protocol announces enhanced rewards for liquidity providers.",
-      time: "2 hours ago",
-      category: "DeFi",
-    },
-    {
-      id: 2,
-      title: "Bitcoin ETF Sees Record Inflows This Week",
-      summary:
-        "Institutional investors continue to show strong interest in cryptocurrency exposure.",
-      time: "4 hours ago",
-      category: "Market",
-    },
-    {
-      id: 3,
-      title: "New Layer 2 Solution Reduces Transaction Costs by 90%",
-      summary:
-        "Revolutionary scaling solution promises to make blockchain transactions more affordable.",
-      time: "6 hours ago",
-      category: "Technology",
-    },
-    {
-      id: 4,
-      title: "Indonesia Crypto Regulations Update",
-      summary:
-        "New guidelines provide clearer framework for cryptocurrency trading and investment.",
-      time: "1 day ago",
-      category: "Regulation",
-    },
-  ];
+  const { id } = useParams();
+  const countryId = typeof id === "string" ? id.toUpperCase() : "";
+  const [news, setNews] = useState([]);
+  const { data, error, isLoading } = useSWR(
+    countryId ? `${RPC_URL}/api/v1/country/${countryId}/trade` : null,
+    fetcher
+  );
+  useEffect(() => {
+    if (data) {
+      console.log("Fetched data:", data.data.news.data);
+      setNews(data.data.news.data);
+    }
+  }, [data]);
 
   return (
     <div className="space-y-4">
-      {newsItems.map((item) => (
-        <div key={item.id} className="group cursor-pointer">
-          <div className="flex justify-between items-start gap-4 p-3 rounded-lg hover:bg-[#2a2d31] transition-colors duration-200">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-1 bg-[#16b264] bg-opacity-20 text-[#16b264] text-xs font-medium rounded">
-                  {item.category}
-                </span>
-                <span className="text-[#697485] text-xs">{item.time}</span>
+      {news.length > 0 &&
+        news.map((item: any, index) => (
+          <Link
+            href={item.url}
+            target="blank"
+            key={index}
+            className="group cursor-pointer"
+          >
+            <div className="flex justify-between items-start gap-4 p-3 rounded-lg hover:bg-[#2a2d31] transition-colors duration-200">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-1 bg-[#16b264] bg-opacity-20 text-[#16b264] text-xs font-medium rounded">
+                    {item.category}
+                  </span>
+                  <span className="text-[#697485] text-xs">
+                    {item.publishedAt}
+                  </span>
+                </div>
+                <h3 className="text-white text-sm font-medium mb-1 group-hover:text-[#16b264] transition-colors line-clamp-3">
+                  {item.title}
+                </h3>
+                <p className="text-[#697485] text-xs leading-relaxed line-clamp-5">
+                  {item.description}
+                </p>
               </div>
-              <h3 className="text-white text-sm font-medium mb-1 group-hover:text-[#16b264] transition-colors">
-                {item.title}
-              </h3>
-              <p className="text-[#697485] text-xs leading-relaxed">
-                {item.summary}
-              </p>
+              <ExternalLink className="w-4 h-4 text-[#697485] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </div>
-            <ExternalLink className="w-4 h-4 text-[#697485] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-          </div>
-        </div>
-      ))}
+          </Link>
+        ))}
     </div>
   );
 };

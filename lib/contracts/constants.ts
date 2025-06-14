@@ -1,7 +1,7 @@
 import { Address, Abi } from "viem";
 import POSITIONS_ABI from "./POSITIONS_ABI.json";
 
-export const RPC_URL = `https://backend.mrfql.my.id`;
+export const RPC_URL = `https://backendd.betheback.my.id`;
 
 export const POSITION_ABI = POSITIONS_ABI as Abi;
 
