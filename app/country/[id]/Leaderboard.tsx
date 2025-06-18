@@ -67,7 +67,6 @@ const NewsSection = () => {
   );
   useEffect(() => {
     if (data) {
-      console.log("Fetched data:", data.data.news.data);
       setNews(data.data.news.data);
     }
   }, [data]);

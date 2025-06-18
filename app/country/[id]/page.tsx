@@ -17,6 +17,8 @@ import {
   RPC_URL,
   POSITION_ADDRESS,
   POSITION_ABI,
+  ORDER_ADDRESS,
+  ORDER_ABI,
 } from "@/lib/contracts/constants";
 import { usePositionsStore } from "@/components/trading/PositionsContext";
 import HistoryTable from "@/components/dashboard/HistoryTable";
@@ -266,9 +268,9 @@ export default function CountryPage() {
 
       // Open Position with ETH
       const tradeTx = await writeContract({
-        address: POSITION_ADDRESS[84532],
-        abi: POSITION_ABI,
-        functionName: "openPosition",
+        address: ORDER_ADDRESS[84532],
+        abi: ORDER_ABI,
+        functionName: "createMarketOrder",
         args: [
           id,
           position.isLong ? 0 : 1,
@@ -276,6 +278,20 @@ export default function CountryPage() {
         ],
         value: sizeInWei, // Send ETH with the transaction
       });
+      // const tradeTx = await writeContract({
+      //   address: POSITION_ADDRESS[84532],
+      //   abi: POSITION_ABI,
+      //   functionName: "createPosition",
+      //   args: [
+      //     address,
+      //     id,
+      //     position.isLong ? 0 : 1,
+      //     sizeInWei,
+      //     parseInt(position.leverage), // Ensure it's an integer
+      //     position.entryPrice,
+      //   ],
+      //   value: sizeInWei, // Send ETH with the transaction
+      // });
       console.log("Trade TX:", tradeTx);
 
       setTransactionStep("success");
@@ -339,10 +355,10 @@ export default function CountryPage() {
       try {
         if (address) {
           await writeContract({
-            address: POSITION_ADDRESS[84532],
-            abi: POSITION_ABI,
+            address: ORDER_ADDRESS[84532],
+            abi: ORDER_ABI,
             functionName: "closePosition",
-            args: [address],
+            args: [address, 100],
           });
         } else {
           throw new Error("Wallet address not available");
