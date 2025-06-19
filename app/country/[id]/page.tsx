@@ -17,6 +17,8 @@ import {
   RPC_URL,
   POSITION_ADDRESS,
   POSITION_ABI,
+  ORDER_ADDRESS,
+  ORDER_ABI,
 } from "@/lib/contracts/constants";
 import { usePositionsStore } from "@/components/trading/PositionsContext";
 import HistoryTable from "@/components/dashboard/HistoryTable";
@@ -111,10 +113,10 @@ export default function CountryPage() {
   const { triggerRefresh } = usePositionsStore();
 
   const { refetch: refetchPositionFromHook } = useReadContract({
-    address: POSITION_ADDRESS[84532],
-    abi: POSITION_ABI,
+    address: ORDER_ADDRESS[84532],
+    abi: ORDER_ABI,
     functionName: "getPosition",
-    args: [countryId, address] as const,
+    args: [address] as const,
     account: address,
   }) as { refetch: () => Promise<{ data: PositionData | undefined }> };
 
@@ -165,15 +167,16 @@ export default function CountryPage() {
         entryPrice: 120,
       });
       setShowPosition(true);
-      const tradeData = {
-        countryId: id,
-        userAddress: address,
-        isOnTrade: true,
-      };
-      localStorage.setItem(
-        `BeTheNation-${id}-${address}`,
-        JSON.stringify(tradeData)
-      );
+      // const tradeData = {
+      //   countryId: id,
+      //   userAddress: address,
+      //   isOnTrade: true,
+      // };
+      // localStorage.setItem(
+      //   `BeTheNation-${id}-${address}`,
+      //   JSON.stringify(tradeData)
+      // );
+      getPosition();
 
       document
         .querySelector("#positions-panel")
@@ -266,9 +269,9 @@ export default function CountryPage() {
 
       // Open Position with ETH
       const tradeTx = await writeContract({
-        address: POSITION_ADDRESS[84532],
-        abi: POSITION_ABI,
-        functionName: "openPosition",
+        address: ORDER_ADDRESS[84532],
+        abi: ORDER_ABI,
+        functionName: "createMarketOrder",
         args: [
           id,
           position.isLong ? 0 : 1,
@@ -339,10 +342,10 @@ export default function CountryPage() {
       try {
         if (address) {
           await writeContract({
-            address: POSITION_ADDRESS[84532],
-            abi: POSITION_ABI,
+            address: ORDER_ADDRESS[84532],
+            abi: ORDER_ABI,
             functionName: "closePosition",
-            args: [address],
+            args: [address, 100],
           });
         } else {
           throw new Error("Wallet address not available");
@@ -354,19 +357,32 @@ export default function CountryPage() {
       setCloseStep(99); // Go to history table
     } else if (closeStep === 99) {
       setShowPosition(false);
-      localStorage.removeItem(`BeTheNation-${id}-${address}`);
+      // localStorage.removeItem(`BeTheNation-${id}-${address}`);
       setCloseStep(null); // Close the entire flow
     }
   };
 
   const [mounted, setMounted] = useState(false);
+  const getPosition = async () => {
+    const existingPosition: any = await refetchPositionFromHook();
+    console.log("Existing position:", existingPosition.data);
+
+    if (
+      existingPosition.data &&
+      existingPosition.data[1] === id &&
+      existingPosition.data[7] === true
+    ) {
+      setShowPosition(true);
+    }
+  };
   useEffect(() => {
     setMounted(true);
-    const storedValue = localStorage.getItem(`BeTheNation-${id}-${address}`);
-    const tradeData = storedValue ? JSON.parse(storedValue) : false;
-    if (tradeData.countryId === id && tradeData.userAddress === address) {
-      setShowPosition(tradeData.isOnTrade);
-    }
+    // const storedValue = localStorage.getItem(`BeTheNation-${id}-${address}`);
+    // const tradeData = storedValue ? JSON.parse(storedValue) : false;
+    // if (tradeData.countryId === id && tradeData.userAddress === address) {
+    //   setShowPosition(tradeData.isOnTrade);
+    // }
+    getPosition();
   }, []);
 
   if (isLoading) {

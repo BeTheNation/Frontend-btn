@@ -28,7 +28,6 @@ export default function CountryCard({ country }: CountryCardProps) {
   };
 
   const countryCode = getCountryCode(country.id);
-  console.log(country);
   // Use a reliable flag API
   const flagUrl = `https://flagcdn.com/w160/${countryCode}.png`;
 
