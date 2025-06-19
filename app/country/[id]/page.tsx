@@ -113,10 +113,10 @@ export default function CountryPage() {
   const { triggerRefresh } = usePositionsStore();
 
   const { refetch: refetchPositionFromHook } = useReadContract({
-    address: POSITION_ADDRESS[84532],
-    abi: POSITION_ABI,
+    address: ORDER_ADDRESS[84532],
+    abi: ORDER_ABI,
     functionName: "getPosition",
-    args: [countryId, address] as const,
+    args: [address] as const,
     account: address,
   }) as { refetch: () => Promise<{ data: PositionData | undefined }> };
 
@@ -167,15 +167,16 @@ export default function CountryPage() {
         entryPrice: 120,
       });
       setShowPosition(true);
-      const tradeData = {
-        countryId: id,
-        userAddress: address,
-        isOnTrade: true,
-      };
-      localStorage.setItem(
-        `BeTheNation-${id}-${address}`,
-        JSON.stringify(tradeData)
-      );
+      // const tradeData = {
+      //   countryId: id,
+      //   userAddress: address,
+      //   isOnTrade: true,
+      // };
+      // localStorage.setItem(
+      //   `BeTheNation-${id}-${address}`,
+      //   JSON.stringify(tradeData)
+      // );
+      getPosition();
 
       document
         .querySelector("#positions-panel")
@@ -278,20 +279,6 @@ export default function CountryPage() {
         ],
         value: sizeInWei, // Send ETH with the transaction
       });
-      // const tradeTx = await writeContract({
-      //   address: POSITION_ADDRESS[84532],
-      //   abi: POSITION_ABI,
-      //   functionName: "createPosition",
-      //   args: [
-      //     address,
-      //     id,
-      //     position.isLong ? 0 : 1,
-      //     sizeInWei,
-      //     parseInt(position.leverage), // Ensure it's an integer
-      //     position.entryPrice,
-      //   ],
-      //   value: sizeInWei, // Send ETH with the transaction
-      // });
       console.log("Trade TX:", tradeTx);
 
       setTransactionStep("success");
@@ -370,19 +357,32 @@ export default function CountryPage() {
       setCloseStep(99); // Go to history table
     } else if (closeStep === 99) {
       setShowPosition(false);
-      localStorage.removeItem(`BeTheNation-${id}-${address}`);
+      // localStorage.removeItem(`BeTheNation-${id}-${address}`);
       setCloseStep(null); // Close the entire flow
     }
   };
 
   const [mounted, setMounted] = useState(false);
+  const getPosition = async () => {
+    const existingPosition: any = await refetchPositionFromHook();
+    console.log("Existing position:", existingPosition.data);
+
+    if (
+      existingPosition.data &&
+      existingPosition.data[1] === id &&
+      existingPosition.data[7] === true
+    ) {
+      setShowPosition(true);
+    }
+  };
   useEffect(() => {
     setMounted(true);
-    const storedValue = localStorage.getItem(`BeTheNation-${id}-${address}`);
-    const tradeData = storedValue ? JSON.parse(storedValue) : false;
-    if (tradeData.countryId === id && tradeData.userAddress === address) {
-      setShowPosition(tradeData.isOnTrade);
-    }
+    // const storedValue = localStorage.getItem(`BeTheNation-${id}-${address}`);
+    // const tradeData = storedValue ? JSON.parse(storedValue) : false;
+    // if (tradeData.countryId === id && tradeData.userAddress === address) {
+    //   setShowPosition(tradeData.isOnTrade);
+    // }
+    getPosition();
   }, []);
 
   if (isLoading) {
