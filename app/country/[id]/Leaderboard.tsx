@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -26,13 +26,40 @@ const CollapsibleSection = ({
   defaultOpen = false,
 }: any) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [height, setHeight] = useState<number | undefined>(
+    defaultOpen ? undefined : 0
+  );
+  const [isInitialized, setIsInitialized] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!contentRef.current) return;
+
+    // On first render, set the correct height without animation
+    if (!isInitialized) {
+      if (defaultOpen) {
+        setHeight(contentRef.current.scrollHeight);
+      }
+      setIsInitialized(true);
+      return;
+    }
+
+    // After initialization, animate height changes
+    if (isOpen) {
+      const scrollHeight = contentRef.current.scrollHeight;
+      setHeight(scrollHeight);
+    } else {
+      setHeight(0);
+    }
+  }, [isOpen, isInitialized, defaultOpen]);
+
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+  };
 
   return (
     <div className="bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] transition-all duration-200 hover:shadow-lg">
-      <div
-        className="p-4 sm:p-6 cursor-pointer"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <div className="p-4 sm:p-6 cursor-pointer" onClick={handleToggle}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Icon className="w-6 h-6 text-[#99a3b2]" />
@@ -40,19 +67,27 @@ const CollapsibleSection = ({
               {title}
             </h2>
           </div>
-          {isOpen ? (
-            <ChevronUp className="w-5 h-5 text-[#99a3b2] transition-transform duration-200" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-[#99a3b2] transition-transform duration-200" />
-          )}
+          <div
+            className={`transition-transform duration-300 ease-in-out ${
+              isOpen ? "rotate-180" : "rotate-0"
+            }`}
+          >
+            <ChevronDown className="w-5 h-5 text-[#99a3b2]" />
+          </div>
         </div>
       </div>
 
-      {isOpen && (
+      <div
+        ref={contentRef}
+        style={{ height }}
+        className={`overflow-hidden ${
+          isInitialized ? "transition-all duration-300 ease-in-out" : ""
+        }`}
+      >
         <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t border-[#323232]">
           <div className="pt-4">{children}</div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -102,6 +137,11 @@ const NewsSection = () => {
             </div>
           </Link>
         ))}
+      {news.length === 0 && (
+        <div className="flex justify-center items-center h-12">
+          <p className="text-[#697485] font-medium">No news found</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -143,7 +183,7 @@ const StatisticsSection = () => {
       {stats.map((stat, index) => (
         <div
           key={index}
-          className="p-4 bg-[#2a2d31] rounded-lg border border-[#323232]"
+          className="p-4 bg-[#2a2d31] rounded-lg border border-[#323232] transform transition-all duration-200 hover:scale-105"
         >
           <div className="flex items-center justify-between mb-2">
             <stat.icon className="w-5 h-5 text-[#99a3b2]" />
@@ -174,7 +214,7 @@ const LeaderboardSection = () => {
 
       <div className="space-y-0">
         {/* Rank #1 */}
-        <div className="py-4 flex justify-between items-center border-b border-[#323232]">
+        <div className="py-4 flex justify-between items-center border-b border-[#323232] transition-colors duration-200 hover:bg-[#2a2d31] hover:bg-opacity-30 -mx-4 px-4 rounded-lg">
           <div className="flex justify-between items-center flex-1 pr-4">
             <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">
               Rank #1
@@ -194,7 +234,7 @@ const LeaderboardSection = () => {
         </div>
 
         {/* Rank #2 */}
-        <div className="py-4 flex justify-between items-center border-b border-[#323232]">
+        <div className="py-4 flex justify-between items-center border-b border-[#323232] transition-colors duration-200 hover:bg-[#2a2d31] hover:bg-opacity-30 -mx-4 px-4 rounded-lg">
           <div className="flex justify-between items-center flex-1 pr-4">
             <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">
               Rank #2
@@ -214,7 +254,7 @@ const LeaderboardSection = () => {
         </div>
 
         {/* Rank #3 */}
-        <div className="py-4 flex justify-between items-center border-b border-[#323232]">
+        <div className="py-4 flex justify-between items-center border-b border-[#323232] transition-colors duration-200 hover:bg-[#2a2d31] hover:bg-opacity-30 -mx-4 px-4 rounded-lg">
           <div className="flex justify-between items-center flex-1 pr-4">
             <div className="text-[#697485] text-sm font-normal font-['Inter'] leading-tight">
               Rank #3
@@ -234,7 +274,7 @@ const LeaderboardSection = () => {
         </div>
 
         {/* Your Rank */}
-        <div className="py-4 flex justify-between items-center bg-[#2a2d31] -mx-4 px-4 rounded-lg">
+        <div className="py-4 flex justify-between items-center bg-[#2a2d31] -mx-4 px-4 rounded-lg transform transition-all duration-200 hover:scale-[1.02]">
           <div className="flex justify-between items-center flex-1 pr-4">
             <div className="text-white text-sm font-semibold font-['Inter'] leading-tight">
               Rank #167
@@ -260,7 +300,7 @@ const LeaderboardSection = () => {
 const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[#111315]">
-      <div className="max-w-md mx-auto space-y-4">
+      <div className="w-full md:max-w-md mx-auto space-y-4 py-4 pt-0">
         {/* News Section */}
         <CollapsibleSection
           title="Latest News"

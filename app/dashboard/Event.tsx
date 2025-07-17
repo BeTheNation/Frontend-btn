@@ -7,6 +7,7 @@ import { RPC_URL } from "@/lib/contracts/constants";
 import { fetcher } from "@/src/services/fetcher";
 import useSWR from "swr";
 import HistoryTable from "@/components/dashboard/HistoryTable";
+import PositionTab from "@/components/dashboard/Position";
 
 export type CountryData = {
   id: string;
@@ -135,9 +136,10 @@ const EventCard = ({ event }: { event: any }) => {
   const formatChange = (change: number) =>
     change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`;
 
-  const daysLeft = Math.ceil(
-    (new Date(event.endDate) - new Date()) / (1000 * 60 * 60 * 24)
-  );
+  const endDate = new Date(event.endDate).getTime();
+  const now = new Date().getTime();
+
+  const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
 
   return (
     <motion.div
@@ -374,6 +376,8 @@ export default function EventsTradingPlatform() {
 
     // Sort events
     return filtered.sort((a, b) => {
+      const dateA = new Date(a.endDate).getTime();
+      const dateB = new Date(b.endDate).getTime();
       switch (sortBy) {
         case "volume":
           return (
@@ -383,7 +387,7 @@ export default function EventsTradingPlatform() {
         case "participants":
           return b.participants - a.participants;
         case "ending":
-          return new Date(a.endDate) - new Date(b.endDate);
+          return dateA - dateB;
         default:
           return 0;
       }
@@ -396,7 +400,7 @@ export default function EventsTradingPlatform() {
       <div className="p-4 md:p-6 bg-[#111214]">
         <div className="w-full flex flex-col space-y-4">
           {/* Tab Navigation */}
-          <div className="px-2 py-2 rounded-[100px] outline outline-2 outline-offset-[-2px] outline-[#1d1f22] flex justify-start items-center gap-2.5 w-full md:w-auto">
+          <div className="px-2 py-2 rounded-[100px] outline-2 outline-offset-[-2px] outline-[#1d1f22] flex justify-start items-center gap-2.5 w-full md:w-auto">
             <motion.button
               onClick={() => setActiveTab("nations")}
               className={`h-12 md:h-[63px] px-4 md:px-6 py-1.5 ${
@@ -434,6 +438,26 @@ export default function EventsTradingPlatform() {
             </motion.button>
 
             <motion.button
+              onClick={() => setActiveTab("positions")}
+              className={`h-12 md:h-[63px] px-4 md:px-6 py-1.5 ${
+                activeTab === "positions"
+                  ? "bg-[#262a33]"
+                  : "hover:bg-[#1d1f22]"
+              } rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] flex justify-center items-center gap-4 flex-1 md:flex-none cursor-pointer`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <div
+                className={`${
+                  activeTab === "positions" ? "text-white" : "text-[#505050]"
+                } text-base md:text-xl font-normal font-['Inter'] leading-tight`}
+              >
+                Positions
+              </div>
+            </motion.button>
+
+            <motion.button
               onClick={() => setActiveTab("history")}
               className={`h-12 md:h-[63px] px-4 md:px-6 py-1.5 ${
                 activeTab === "history" ? "bg-[#262a33]" : "hover:bg-[#1d1f22]"
@@ -454,7 +478,7 @@ export default function EventsTradingPlatform() {
 
           {/* Events Controls */}
           <AnimatePresence>
-            {activeTab !== "history" && (
+            {activeTab !== "history" && activeTab !== "positions" && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -499,7 +523,7 @@ export default function EventsTradingPlatform() {
                         ? setSelectedCategoryNation(e.target.value)
                         : setSelectedCategoryEvent(e.target.value)
                     }
-                    className="bg-[#1d1f22] border border-[#2a2d33] rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    className="bg-[#1d1f22] border border-[#2a2d33] rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none cursor-pointer hover:bg-[#2a2d33]"
                   >
                     {activeTab === "nations" &&
                       categoriesNations.map((category) => (
@@ -519,7 +543,7 @@ export default function EventsTradingPlatform() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-[#1d1f22] border border-[#2a2d33] rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    className="bg-[#1d1f22] border border-[#2a2d33] rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:outline-none cursor-pointer hover:bg-[#2a2d33]"
                   >
                     <option value="volume">Volume</option>
                     <option value="participants">Traders</option>
@@ -661,6 +685,19 @@ export default function EventsTradingPlatform() {
                   </p>
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {activeTab === "positions" && (
+            <motion.div
+              key="positions"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+              className="w-full overflow-x-auto"
+            >
+              <PositionTab />
             </motion.div>
           )}
 

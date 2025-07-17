@@ -1,3 +1,10 @@
+"use client";
+
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { useAccount } from "wagmi";
+
 interface TradePosition {
   size: string;
   leverage: string;
@@ -37,6 +44,11 @@ const TradingPanel = ({
   transactionStep,
   handlePlaceTrade,
 }: TradingPanelProps) => {
+  const { isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const [orderType, setOrderType] = useState("Market");
+  const [isStopLossActive, setIsStopLossActive] = useState(false);
+
   return (
     <div className="self-stretch p-4 sm:p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] inline-flex flex-col justify-start items-start gap-4 sm:gap-6 transition-all duration-200 hover:shadow-lg">
       <div className="self-stretch px-2.5 py-2 bg-[#2d2d2e] rounded-[100px] flex">
@@ -59,7 +71,7 @@ const TradingPanel = ({
               position.isLong
                 ? "text-white"
                 : "text-white hover:bg-[#343333] rounded-[100px] transition-colors duration-300"
-            }`} /* Even smaller padding for mobile */
+            }`}
             onClick={() => setPosition({ ...position, isLong: true })}
           >
             <div className="flex items-center gap-1 sm:gap-1.5">
@@ -117,11 +129,43 @@ const TradingPanel = ({
         <div className="self-stretch flex-1 bg-[#1d1f22] rounded shadow-[0px_0.7857142686843872px_1.5714285373687744px_0px_rgba(16,24,40,0.06)] shadow-[0px_0.7857142686843872px_2.357142925262451px_0px_rgba(16,24,40,0.10)] flex flex-col justify-between items-start">
           <div className="self-stretch flex flex-col justify-start items-start gap-[18px]">
             <div className="self-stretch inline-flex justify-start items-center gap-[12.57px]">
-              <div className="flex-1 justify-start text-white text-lg font-medium font-['Inter'] leading-snug">
-                Market
+              {/* Dropdown order type */}
+              <div className="dropdown dropdown-hover -mt-2">
+                <div
+                  tabIndex={0}
+                  role="button"
+                  className="flex flex-1 items-center justify-start text-white text-lg font-medium font-['Inter'] leading-snug cursor-pointer"
+                >
+                  {orderType} <ChevronDown size={23} className="ml-1" />
+                </div>
+                <ul
+                  tabIndex={0}
+                  className="dropdown-content menu bg-[#1d1f22] rounded-box z-1 w-52 p-2 shadow-sm"
+                >
+                  <li
+                    onClick={() => {
+                      setOrderType("Market");
+                      const element = document.activeElement as HTMLElement;
+                      element?.blur(); // This closes the dropdown
+                    }}
+                    className="hover:bg-[#2d2d2e] rounded-md"
+                  >
+                    <a>Market</a>
+                  </li>
+                  <li
+                    onClick={() => {
+                      setOrderType("Limit");
+                      const element = document.activeElement as HTMLElement;
+                      element?.blur(); // This closes the dropdown
+                    }}
+                    className="hover:bg-[#2d2d2e] rounded-md"
+                  >
+                    <a>Limit</a>
+                  </li>
+                </ul>
               </div>
             </div>
-            <div className="self-stretch inline-flex justify-start items-start gap-[19px]">
+            <div className="self-stretch inline-flex justify-start items-start gap-[19px] -mt-1">
               <div className="flex-1 flex justify-start items-center gap-[12.57px]">
                 <div className="flex-1 justify-start min-w-0">
                   {" "}
@@ -140,36 +184,71 @@ const TradingPanel = ({
                             walletBalance.symbol
                           }`
                         : "Loading..."
-                      : "Connect Wallet"}
+                      : "0.000"}
                   </span>
                 </div>
               </div>
-              <div className="flex justify-start items-center gap-[12.57px]">
-                <div className="justify-start text-[#666666] text-sm sm:text-base font-medium font-['Inter'] leading-snug cursor-pointer whitespace-nowrap">
-                  {" "}
-                  {/* Add whitespace-nowrap */}
-                  Deposit Funds
-                </div>
+              {/* Deposit funds */}
+              <div className="flex justify-start items-center gap-[12.57px] text-[#666666] text-sm sm:text-base font-medium font-['Inter'] leading-snug cursor-pointer whitespace-nowrap">
+                <button
+                  className="cursor-pointer hover:text-gray-400 transition-colors duration-100"
+                  onClick={() => {
+                    const size = Number(walletBalance.formatted).toFixed(4);
+                    // const sanitized = size.replace(/,/g, ".");
+                    setPosition({
+                      ...position,
+                      size: size,
+                    });
+                  }}
+                >
+                  Max Balance
+                </button>
               </div>
             </div>
           </div>
-          <div className="self-stretch h-[50px] sm:h-[63px] px-3 sm:px-[22px] py-1.5 bg-[#2d2e2e] rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] inline-flex justify-end items-center gap-1">
+          {/* Input total size trade */}
+          <div className="self-stretch mt-2 h-[50px] sm:h-[63px] px-3 sm:px-[22px] py-1.5 bg-[#2d2e2e] rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] inline-flex justify-end items-center gap-1">
             <input
               type="number"
               value={position.size}
-              onChange={(e) =>
-                setPosition({ ...position, size: e.target.value })
-              }
-              placeholder="0.00"
-              className={`flex-1 bg-transparent text-left outline-none border-none ${
-                position.size ? "text-white" : "text-red-500"
-              } text-lg sm:text-xl font-bold font-['Inter'] leading-tight min-w-0`}
+              // onChange={(e) =>
+              //   setPosition({ ...position, size: e.target.value })
+              // }
+              onKeyDown={(e) => {
+                if (e.key === "," || e.key === "Decimal") {
+                  e.preventDefault();
+                }
+              }}
+              onChange={(e) => {
+                const sanitized = e.target.value.replace(/,/g, "."); // or replace with '.' if you want
+                setPosition({ ...position, size: sanitized });
+              }}
+              placeholder="Total size..."
+              className={`flex-1 bg-transparent text-left outline-none border-none text-gray-200 text-xl font-semibold font-['Inter'] leading-tight min-w-0`}
             />
             <div className="text-[#d6d6d6] text-lg sm:text-xl font-bold font-['Inter'] leading-tight whitespace-nowrap">
               USDC
             </div>
           </div>
-          <div className="self-stretch py-4 sm:py-6 relative inline-flex justify-start items-center gap-3">
+          {/* Input entry price on limit order */}
+          {orderType === "Limit" && (
+            <div className="self-stretch mt-2 h-[50px] sm:h-[63px] px-3 sm:px-[22px] py-1.5 bg-[#2d2e2e] rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] inline-flex justify-end items-center gap-1">
+              <input
+                type="number"
+                value={position.size}
+                onChange={(e) =>
+                  setPosition({ ...position, size: e.target.value })
+                }
+                placeholder="Entry price..."
+                className={`flex-1 bg-transparent text-left outline-none border-none text-gray-200  text-xl font-semibold font-['Inter'] leading-tight min-w-0`}
+              />
+              <div className="text-[#d6d6d6] text-lg sm:text-xl font-bold font-['Inter'] leading-tight whitespace-nowrap">
+                USDC
+              </div>
+            </div>
+          )}
+          {/* Leverage slider */}
+          <div className="self-stretch pl-3 py-4 sm:py-6 relative inline-flex justify-start items-center gap-3">
             <div className="flex-1 h-1 bg-[#2d2e2e] rounded-full relative">
               <div
                 className="absolute h-full bg-gradient-to-r from-[#155dee] to-[#45b3ff] rounded-full transition-all duration-200"
@@ -220,9 +299,57 @@ const TradingPanel = ({
               </div>
             </div>
           </div>
-          <div className="self-stretch inline-flex justify-center items-center">
+          {/* Checkbox for SL / TP */}
+          <section className="cursor-pointer -mt-2 ml-1">
+            {/* <input
+              type="checkbox"
+              id="sltp"
+              checked={isStopLossActive}
+              onChange={() => setIsStopLossActive(!isStopLossActive)}
+              className="checkbox checkbox-primary mr-1 checkbox-sm"
+            />{" "} */}
+            {/* <label htmlFor="sltp" className="cursor-pointer text-sm">
+              Stop Loss / Take Profit
+            </label> */}
+          </section>
+          {/* Input stop loss */}
+          {isStopLossActive && (
+            <div className="self-stretch mt-3 h-[50px] sm:h-[63px] px-3 sm:px-[22px] py-1.5 bg-[#2d2e2e] rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] inline-flex justify-end items-center gap-1">
+              <input
+                type="number"
+                value={position.size}
+                onChange={(e) =>
+                  setPosition({ ...position, size: e.target.value })
+                }
+                placeholder="Stop loss..."
+                className={`flex-1 bg-transparent text-left outline-none border-none text-gray-200 text-xl font-semibold font-['Inter'] leading-tight min-w-0`}
+              />
+              <div className="text-[#d6d6d6] text-lg sm:text-xl font-bold font-['Inter'] leading-tight whitespace-nowrap">
+                USDC
+              </div>
+            </div>
+          )}
+          {/* Input take profit */}
+          {isStopLossActive && (
+            <div className="self-stretch mt-2 h-[50px] sm:h-[63px] px-3 sm:px-[22px] py-1.5 bg-[#2d2e2e] rounded-[100px] shadow-[inset_1px_2px_2px_0px_rgba(0,0,0,0.08)] inline-flex justify-end items-center gap-1">
+              <input
+                type="number"
+                value={position.size}
+                onChange={(e) =>
+                  setPosition({ ...position, size: e.target.value })
+                }
+                placeholder="Take profit..."
+                className={`flex-1 bg-transparent text-left outline-none border-none text-gray-200 text-xl font-semibold font-['Inter'] leading-tight min-w-0`}
+              />
+              <div className="text-[#d6d6d6] text-lg sm:text-xl font-bold font-['Inter'] leading-tight whitespace-nowrap">
+                USDC
+              </div>
+            </div>
+          )}
+          {/* Info trade */}
+          <div className="self-stretch inline-flex justify-center items-center -mt-2">
             <div className="w-full py-4 flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8">
-              <div className="w-full sm:w-[202px] flex justify-center items-center gap-3">
+              <div className="w-full pl-3 sm:w-[202px] flex justify-center items-center gap-3">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-[100px] flex items-center justify-center">
                   <div className="w-6 h-6 sm:w-8 sm:h-8 bg-[#16b2644D] rounded-[100px] flex items-center justify-center">
                     <svg
@@ -297,10 +424,11 @@ const TradingPanel = ({
             disabled={
               !position.size || isProcessing || transactionStep !== "idle"
             }
-            onClick={handlePlaceTrade}
+            onClick={isConnected ? handlePlaceTrade : openConnectModal}
           >
             <div className="text-center justify-center text-white text-xl font-medium font-['Inter'] leading-normal">
-              {transactionStep === "approving"
+              {!isConnected ? "Connect Wallet" : "Place Trade"}
+              {isConnected && transactionStep === "approving"
                 ? "Approving USDC..."
                 : transactionStep === "trading"
                 ? "Opening Position..."
@@ -310,7 +438,7 @@ const TradingPanel = ({
                 ? "Failed - Try Again"
                 : isProcessing
                 ? "Processing..."
-                : "Place Trade"}
+                : ""}
             </div>
           </button>
         </div>
