@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
 
@@ -13,15 +13,8 @@ import {
 } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
 
-import {
-  RPC_URL,
-  POSITION_ADDRESS,
-  POSITION_ABI,
-  ORDER_ADDRESS,
-  ORDER_ABI,
-} from "@/lib/contracts/constants";
+import { RPC_URL, POOL_ADDRESS, POOL_ABI } from "@/lib/contracts/constants";
 import { usePositionsStore } from "@/components/trading/PositionsContext";
-import HistoryTable from "@/components/dashboard/HistoryTable";
 import { fetcher } from "@/src/services/fetcher";
 import BackButton from "./BackButton";
 import Header from "./Header";
@@ -29,6 +22,38 @@ import Chart from "./Chart";
 import TradingPanel from "./TradingPanel";
 import About from "./About";
 import Leaderboard from "./Leaderboard";
+import TradingPositionsDashboard from "./Position2";
+import { Bounce, ToastContainer } from "react-toastify";
+import { buySuccess } from "@/lib/react-notify/notify";
+
+const OpenPositionContext = createContext<{
+  openPosition: any[] | null;
+  setOpenPosition: React.Dispatch<React.SetStateAction<any[] | null>>;
+} | null>(null);
+
+export function OpenPositionProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [openPosition, setOpenPosition] = useState<any[] | null>(null);
+
+  return (
+    <OpenPositionContext.Provider value={{ openPosition, setOpenPosition }}>
+      {children}
+    </OpenPositionContext.Provider>
+  );
+}
+
+export function useOpenPosition() {
+  const context = useContext(OpenPositionContext);
+  if (!context) {
+    throw new Error(
+      "useOpenPosition must be used within an OpenPositionProvider"
+    );
+  }
+  return context;
+}
 
 export default function CountryPage() {
   const { id } = useParams();
@@ -100,6 +125,8 @@ export default function CountryPage() {
   });
 
   const [showPosition, setShowPosition] = useState(false);
+  // const [openPosition, setOpenPosition] = useState<any[] | null>(null);
+  const { openPosition, setOpenPosition } = useOpenPosition();
   const [closeStep, setCloseStep] = useState<1 | 2 | 3 | 4 | 99 | null>(null);
 
   const { writeContract, data: hash, isPending } = useWriteContract();
@@ -113,9 +140,9 @@ export default function CountryPage() {
   const { triggerRefresh } = usePositionsStore();
 
   const { refetch: refetchPositionFromHook } = useReadContract({
-    address: ORDER_ADDRESS[84532],
-    abi: ORDER_ABI,
-    functionName: "getPosition",
+    address: POOL_ADDRESS[84532],
+    abi: POOL_ABI,
+    functionName: "getTraderPositions",
     args: [address] as const,
     account: address,
   }) as { refetch: () => Promise<{ data: PositionData | undefined }> };
@@ -167,20 +194,11 @@ export default function CountryPage() {
         entryPrice: 120,
       });
       setShowPosition(true);
-      // const tradeData = {
-      //   countryId: id,
-      //   userAddress: address,
-      //   isOnTrade: true,
-      // };
-      // localStorage.setItem(
-      //   `BeTheNation-${id}-${address}`,
-      //   JSON.stringify(tradeData)
-      // );
       getPosition();
 
-      document
-        .querySelector("#positions-panel")
-        ?.scrollIntoView({ behavior: "smooth" });
+      // document
+      //   .querySelector("#positions-panel")
+      //   ?.scrollIntoView({ behavior: "smooth" });
 
       const timer = setTimeout(() => {
         refetchBalance().catch((err) =>
@@ -234,11 +252,11 @@ export default function CountryPage() {
 
       // Validate position parameters
       if (!position.size || Number(position.size) <= 0) {
-        throw new Error("Position size must be greater than 0");
+        alert("Position size must be greater than 0");
       }
 
       if (Number(position.leverage) < 1 || Number(position.leverage) > 5) {
-        throw new Error("Leverage must be between 1 and 5");
+        alert("Leverage must be between 1 and 5");
       }
 
       // Convert ETH amount to wei
@@ -253,26 +271,36 @@ export default function CountryPage() {
       });
 
       // Check if position already exists
-      try {
-        const existingPosition = await refetchPositionFromHook();
-        console.log("Existing position:", existingPosition.data);
+      // try {
+      //   const existingPosition = await refetchPositionFromHook();
+      //   console.log("Existing position:", existingPosition.data);
 
-        if (existingPosition.data && existingPosition.data.isOpen) {
-          throw new Error(
-            "Position already exists. Close your current position before opening a new one."
-          );
-        }
-      } catch (positionCheckError) {
-        console.log("Position check result:", positionCheckError);
-        // Continue if position doesn't exist or check fails
-      }
+      //   if (existingPosition.data && existingPosition.data.isOpen) {
+      //     throw new Error(
+      //       "Position already exists. Close your current position before opening a new one."
+      //     );
+      //   }
+      // } catch (positionCheckError) {
+      //   console.log("Position check result:", positionCheckError);
+      // }
+
+      // Check balance
+      // if (walletBalance && walletBalance.formatted) {
+      //   const balance = Number(walletBalance.formatted);
+      //   if (balance < Number(position.size)) {
+      //     throw new Error(
+      //       `Insufficient ETH balance. Required: ${position.size} ETH, Available: ${balance} ETH`
+      //     );
+      //   }
+      // }
 
       // Open Position with ETH
       const tradeTx = await writeContract({
-        address: ORDER_ADDRESS[84532],
-        abi: ORDER_ABI,
+        address: POOL_ADDRESS[84532],
+        abi: POOL_ABI,
         functionName: "createMarketOrder",
         args: [
+          address,
           id,
           position.isLong ? 0 : 1,
           parseInt(position.leverage), // Ensure it's an integer
@@ -296,6 +324,7 @@ export default function CountryPage() {
         console.error("Failed to refresh balance:", err)
       );
       triggerRefresh();
+      buySuccess();
     } catch (error) {
       setTransactionStep("error");
       console.error("Error placing trade:", error);
@@ -325,6 +354,43 @@ export default function CountryPage() {
   };
   const isProcessing = isPending || isConfirming;
 
+  const handleClosePosition = async (
+    positionId: any,
+    amount: number,
+    size: number
+  ) => {
+    try {
+      if (address) {
+        if (size <= 0 || size > 100) {
+          alert("Invalid position size");
+          return;
+        }
+        const paddedPositionId = positionId.toString(16).padStart(64, "0");
+        const bytes32PositionId = `0x${paddedPositionId}`;
+        if (size === 100) {
+          await writeContract({
+            address: POOL_ADDRESS[84532],
+            abi: POOL_ABI,
+            functionName: "closePositionId",
+            args: [bytes32PositionId],
+          });
+        } else {
+          await writeContract({
+            address: POOL_ADDRESS[84532],
+            abi: POOL_ABI,
+            functionName: "closePositionPartial",
+            args: [bytes32PositionId, amount],
+          });
+        }
+      } else {
+        alert("Wallet address not available");
+      }
+    } catch (error) {
+      console.error("Error closing position:", error);
+      // Handle error appropriately
+    }
+  };
+
   const handleCloseStepContinue = async () => {
     if (closeStep === 1) {
       setCloseStep(2); // Go to step 2
@@ -342,10 +408,10 @@ export default function CountryPage() {
       try {
         if (address) {
           await writeContract({
-            address: ORDER_ADDRESS[84532],
-            abi: ORDER_ABI,
-            functionName: "closePosition",
-            args: [address, 100],
+            address: POOL_ADDRESS[84532],
+            abi: POOL_ABI,
+            functionName: "closePositionById",
+            args: [openPosition, 100],
           });
         } else {
           throw new Error("Wallet address not available");
@@ -366,22 +432,19 @@ export default function CountryPage() {
   const getPosition = async () => {
     const existingPosition: any = await refetchPositionFromHook();
     console.log("Existing position:", existingPosition.data);
-
-    if (
-      existingPosition.data &&
-      existingPosition.data[1] === id &&
-      existingPosition.data[7] === true
-    ) {
-      setShowPosition(true);
-    }
+    const positionCountry = existingPosition.data[1].filter(
+      (position: any) =>
+        position.countryId.toUpperCase() === id &&
+        // position.isOpen &&
+        position.size > 0 &&
+        position.trader === address
+    );
+    console.log("Position country:", positionCountry);
+    setOpenPosition(positionCountry);
+    // setShowPosition(true);
   };
   useEffect(() => {
     setMounted(true);
-    // const storedValue = localStorage.getItem(`BeTheNation-${id}-${address}`);
-    // const tradeData = storedValue ? JSON.parse(storedValue) : false;
-    // if (tradeData.countryId === id && tradeData.userAddress === address) {
-    //   setShowPosition(tradeData.isOnTrade);
-    // }
     getPosition();
   }, []);
 
@@ -403,6 +466,19 @@ export default function CountryPage() {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        transition={Bounce}
+      />
       <div className="container mx-auto p-2 sm:p-6 bg-[#111214] min-h-screen">
         <BackButton />
 
@@ -438,423 +514,14 @@ export default function CountryPage() {
             <Leaderboard />
 
             {/* Positions Panel */}
-            <div
-              id="positions-panel"
-              className="self-stretch p-4 sm:p-6 bg-[#1d1f22] rounded-xl shadow-[0px_1px_2px_0px_rgba(16,24,40,0.06)] shadow-[0px_1px_3px_0px_rgba(16,24,40,0.10)] outline outline-1 outline-offset-[-1px] outline-[#323232] flex flex-col justify-start items-start gap-4 sm:gap-5 min-h-[300px] sm:min-h-[400px]"
-            >
-              <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
-                <div className="text-white text-lg font-medium font-['Inter'] leading-7">
-                  Positions
-                </div>
-                {showPosition && closeStep === null && (
-                  <button
-                    className="w-full sm:w-auto px-4 py-2 rounded-full bg-[#155dee] hover:bg-[#0d4bc4] transition-colors duration-200 flex justify-center items-center gap-2 cursor-pointer"
-                    onClick={() => setCloseStep(1)}
-                  >
-                    <span className="text-white text-sm sm:text-base font-semibold">
-                      Close Position
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              <div className="w-full flex-1">
-                {showPosition && closeStep === null ? (
-                  <div className="w-full flex flex-col justify-start items-start space-y-3">
-                    <div className="w-full h-px bg-[#323232]" />
-
-                    {/* Position Header */}
-                    <div className="w-full py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-[#155dee] rounded-full" />
-                        <span className="text-[#697485] text-sm font-medium">
-                          {country.name}
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            position.isLong
-                              ? "bg-[#16b264] bg-opacity-20 text-[#16b264]"
-                              : "bg-[#ff4545] bg-opacity-20 text-[#ff4545]"
-                          }`}
-                        >
-                          {position.isLong ? "LONG" : "SHORT"}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[#b21616] text-sm font-normal">
-                          -$0.24 (-0.0%)
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Position Details */}
-                    <div className="w-full space-y-3">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 border-b border-[#323232] border-opacity-50">
-                        <span className="text-[#697485] text-sm font-medium mb-1 sm:mb-0">
-                          Position Size
-                        </span>
-                        <span className="text-[#697586] text-sm font-normal">
-                          ${position.size}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 border-b border-[#323232] border-opacity-50">
-                        <span className="text-[#697485] text-sm font-medium mb-1 sm:mb-0">
-                          Entry Price
-                        </span>
-                        <span className="text-[#697586] text-sm font-normal">
-                          {country.markPrice}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 border-b border-[#323232] border-opacity-50">
-                        <span className="text-[#697485] text-sm font-medium mb-1 sm:mb-0">
-                          Liquidation Price
-                        </span>
-                        <span className="text-[#697586] text-sm font-normal">
-                          {country.liquidationPrice}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 border-b border-[#323232] border-opacity-50">
-                        <span className="text-[#697485] text-sm font-medium mb-1 sm:mb-0">
-                          Fees
-                        </span>
-                        <span className="text-[#697586] text-sm font-normal">
-                          $2.50
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="w-full h-px bg-[#323232] my-4" />
-
-                    {/* Additional Position */}
-                    <div className="w-full py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-[#155dee] rounded-full" />
-                        <span className="text-[#697485] text-sm font-medium">
-                          Abstract
-                        </span>
-                      </div>
-                      <div className="text-[#16b264] text-sm font-normal">
-                        $0.24 (+0.5%)
-                      </div>
-                    </div>
-                  </div>
-                ) : closeStep ? (
-                  <div className="w-full flex-1 px-2 sm:px-4">
-                    {/* Progress Steps */}
-                    <div className="flex justify-between items-center mb-6 sm:mb-8">
-                      {[1, 2, 3, 4].map((number) => (
-                        <div key={number} className="flex items-center flex-1">
-                          <div
-                            className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
-                              closeStep === number
-                                ? "bg-[#155dee] text-white"
-                                : closeStep > number
-                                ? "bg-[#155dee] text-white"
-                                : "bg-[#2d2d2e] text-gray-400"
-                            }`}
-                          >
-                            {number}
-                          </div>
-                          {number < 4 && (
-                            <div
-                              className={`h-0.5 flex-1 mx-1 sm:mx-2 ${
-                                closeStep > number
-                                  ? "bg-[#155dee]"
-                                  : "bg-[#2d2d2e]"
-                              }`}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Step Content */}
-                    <div className="mb-6 space-y-4">
-                      {closeStep === 1 && (
-                        <>
-                          <div className="text-center mb-6">
-                            <h2 className="text-white text-lg sm:text-xl font-semibold mb-2">
-                              Close Position
-                            </h2>
-                            <p className="text-gray-400 text-sm">
-                              Are you sure you want to close this position?
-                            </p>
-                          </div>
-                          <div className="space-y-3">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                              <span className="text-gray-400 text-sm">
-                                Position
-                              </span>
-                              <span className="text-white text-sm font-medium">
-                                {country.name}{" "}
-                                {position.isLong ? "LONG" : "SHORT"}
-                              </span>
-                            </div>
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                              <span className="text-gray-400 text-sm">
-                                Size
-                              </span>
-                              <span className="text-white text-sm font-medium">
-                                ${position.size}
-                              </span>
-                            </div>
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                              <span className="text-gray-400 text-sm">
-                                Entry Price
-                              </span>
-                              <span className="text-white text-sm font-medium">
-                                {country.markPrice}
-                              </span>
-                            </div>
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                              <span className="text-gray-400 text-sm">
-                                Mark Price
-                              </span>
-                              <span className="text-white text-sm font-medium">
-                                {country.markPrice}
-                              </span>
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {closeStep === 2 && (
-                        <>
-                          <div className="text-center mb-6">
-                            <h2 className="text-white text-lg sm:text-xl font-semibold mb-2">
-                              Confirm PnL
-                            </h2>
-                            <p className="text-gray-400 text-sm">
-                              Review your position&apos;s performance
-                            </p>
-                          </div>
-                          {(() => {
-                            const { pnl, percentage, fees, isProfit } =
-                              getPnLInfo();
-                            return (
-                              <>
-                                <div className="text-center mb-6">
-                                  <div
-                                    className={`text-xl sm:text-2xl font-bold ${
-                                      isProfit
-                                        ? "text-[#16b264]"
-                                        : "text-[#ff4545]"
-                                    }`}
-                                  >
-                                    {pnl >= 0 ? "+" : "-"}$
-                                    {Math.abs(pnl).toFixed(2)}
-                                  </div>
-                                  <div
-                                    className={
-                                      isProfit
-                                        ? "text-[#16b264]"
-                                        : "text-[#ff4545]"
-                                    }
-                                  >
-                                    ({percentage >= 0 ? "+" : "-"}
-                                    {Math.abs(percentage).toFixed(2)}%)
-                                  </div>
-                                </div>
-                                <div className="space-y-3">
-                                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                                    <span className="text-gray-400 text-sm">
-                                      Trading Fees
-                                    </span>
-                                    <span className="text-white text-sm">
-                                      -${fees.toFixed(2)}
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
-                                    <span className="text-gray-400 text-sm">
-                                      Net PnL
-                                    </span>
-                                    <span
-                                      className={
-                                        isProfit
-                                          ? "text-[#16b264] text-sm"
-                                          : "text-[#ff4545] text-sm"
-                                      }
-                                    >
-                                      {pnl - fees >= 0 ? "+" : "-"}$
-                                      {Math.abs(pnl - fees).toFixed(2)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </>
-                            );
-                          })()}
-                        </>
-                      )}
-
-                      {closeStep === 3 && (
-                        <>
-                          <div className="text-center mb-6">
-                            <h2 className="text-white text-lg sm:text-xl font-semibold mb-2">
-                              Updated Balance
-                            </h2>
-                            <p className="text-gray-400 text-sm">
-                              Your new balance after closing position
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-white text-2xl sm:text-3xl font-bold mb-2">
-                              {newBalance !== null
-                                ? `$${newBalance.toFixed(2)}`
-                                : "Loading..."}
-                            </div>
-                            <div className="text-gray-400 text-sm">
-                              Previous:{" "}
-                              {previousBalance !== null
-                                ? `$${previousBalance.toFixed(2)}`
-                                : "Loading..."}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {closeStep === 4 && (
-                        <>
-                          <div className="text-center mb-6">
-                            <h2 className="text-white text-lg sm:text-xl font-semibold mb-2">
-                              Trade History
-                            </h2>
-                            <p className="text-gray-400 text-sm">
-                              Position successfully closed
-                            </p>
-                          </div>
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                            <div>
-                              <div className="text-white text-sm font-medium">
-                                {country.name}{" "}
-                                {position.isLong ? "LONG" : "SHORT"}
-                              </div>
-                              <div className="text-gray-400 text-xs">
-                                Closed at {new Date().toLocaleTimeString()}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-[#16b264] text-sm font-medium">
-                                +$0.00
-                              </div>
-                              <div className="text-gray-400 text-xs">0.0%</div>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6">
-                      {closeStep === 1 && (
-                        <>
-                          <button
-                            onClick={() => setCloseStep(null)}
-                            className="w-full py-3 rounded-full bg-[#2d2d2e] text-white hover:bg-[#3d3d3e] transition-colors duration-200"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={handleCloseStepContinue}
-                            className="w-full py-3 rounded-full bg-[#155dee] text-white hover:bg-[#0d4bc4] transition-colors duration-200"
-                          >
-                            Close Position
-                          </button>
-                        </>
-                      )}
-                      {closeStep === 2 && (
-                        <button
-                          onClick={handleCloseStepContinue}
-                          className="w-full py-3 rounded-full bg-[#155dee] text-white hover:bg-[#0d4bc4] transition-colors duration-200"
-                        >
-                          Continue
-                        </button>
-                      )}
-                      {closeStep === 3 && (
-                        <button
-                          onClick={handleCloseStepContinue}
-                          className="w-full py-3 rounded-full bg-[#155dee] text-white hover:bg-[#0d4bc4] transition-colors duration-200"
-                        >
-                          View History
-                        </button>
-                      )}
-                      {closeStep === 4 && (
-                        <button
-                          onClick={handleCloseStepContinue}
-                          className="w-full py-3 rounded-full bg-[#155dee] text-white hover:bg-[#0d4bc4] transition-colors duration-200"
-                        >
-                          View History
-                        </button>
-                      )}
-                      {closeStep === 99 && (
-                        <button
-                          onClick={handleCloseStepContinue}
-                          className="w-full py-3 rounded-full bg-[#155dee] text-white hover:bg-[#0d4bc4] transition-colors duration-200"
-                        >
-                          Done
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ) : closeStep === 99 ? (
-                  <div className="w-full overflow-x-auto">
-                    <div className="w-full flex flex-col gap-4">
-                      {/* Header */}
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-white text-lg font-medium">
-                          Trade History
-                        </h3>
-                        <button
-                          onClick={() => setCloseStep(null)}
-                          className="text-gray-400 hover:text-white transition-colors"
-                        >
-                          <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-
-                      {/* History Table */}
-                      <HistoryTable />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
-                    <svg
-                      className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2v-14a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                    <p className="text-gray-500 text-sm sm:text-base">
-                      No open positions
-                    </p>
-                    <p className="text-gray-600 text-xs sm:text-sm mt-1">
-                      Place a trade to see your positions here
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            {openPosition === null ? (
+              <div>Loading positions...</div>
+            ) : (
+              <TradingPositionsDashboard
+                myPositions={openPosition}
+                closePosition={handleClosePosition}
+              />
+            )}
           </div>
         </div>
       </div>

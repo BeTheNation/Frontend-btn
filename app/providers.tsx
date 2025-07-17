@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { config } from "@/lib/wallet";
 import "@rainbow-me/rainbowkit/styles.css";
 import { PositionsProvider } from "@/components/trading/PositionsContext";
+import { OpenPositionProvider } from "./country/[id]/page";
 
 const queryClient = new QueryClient();
 
@@ -15,7 +16,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <WagmiConfig config={config}>
         <PositionsProvider>
-          <RainbowKitProvider>{children}</RainbowKitProvider>
+          <RainbowKitProvider>
+            <OpenPositionProvider>{children}</OpenPositionProvider>
+          </RainbowKitProvider>
         </PositionsProvider>
       </WagmiConfig>
     </QueryClientProvider>

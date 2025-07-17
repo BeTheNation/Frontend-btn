@@ -1,27 +1,26 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useAccount } from "wagmi";
 import Image from "next/image";
 
 export function ConnectWalletButton() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isConnected } = useAccount();
-  const [wasConnected, setWasConnected] = useState(false);
 
   // Track connection state changes to detect when a user has just connected or disconnected
   useEffect(() => {
-    if (isConnected && !wasConnected) {
-      // User just connected their wallet
+    if (pathname === "/" && isConnected) {
       router.push("/dashboard");
-    } else if (!isConnected && wasConnected) {
-      // User just disconnected their wallet
+    }
+
+    if (pathname !== "/" && !isConnected) {
       router.push("/");
     }
-    setWasConnected(isConnected);
-  }, [isConnected, wasConnected, router]);
+  }, [isConnected, pathname]);
 
   return (
     <ConnectButton.Custom>
