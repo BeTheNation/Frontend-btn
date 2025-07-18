@@ -20,9 +20,9 @@ export const ORDER_ADDRESS: Record<number, Address> = {
 } as const;
 
 export const POOL_ADDRESS: Record<number, Address> = {
-  97: "0x58Ef175Ee3c1CEF2603130F89cDcD09d6406230C", // BNB Testnet
+  97: "0x729e9250fDec66dbb09db7757206dB569EF700C5", // BNB Testnet
 } as const;
 
 export const RESOLVE_ADDRESS: Record<number, Address> = {
-  97: "0x579364ACB169d953e26561073F5A95F490A4bE06", // BNB Testnet
+  97: "0x27B6018F6a8656e6da0f81eEc41849A529564F41", // BNB Testnet
 } as const;
