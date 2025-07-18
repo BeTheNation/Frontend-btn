@@ -20,9 +20,9 @@ export const ORDER_ADDRESS: Record<number, Address> = {
 } as const;
 
 export const POOL_ADDRESS: Record<number, Address> = {
-  84532: "0x58Ef175Ee3c1CEF2603130F89cDcD09d6406230C", // Base Sepolia
+  97: "0x58Ef175Ee3c1CEF2603130F89cDcD09d6406230C", // BNB Testnet
 } as const;
 
 export const RESOLVE_ADDRESS: Record<number, Address> = {
-  84532: "0x579364ACB169d953e26561073F5A95F490A4bE06", // Base Sepolia
+  97: "0x579364ACB169d953e26561073F5A95F490A4bE06", // BNB Testnet
 } as const;
