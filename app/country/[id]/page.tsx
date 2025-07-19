@@ -140,7 +140,7 @@ export default function CountryPage() {
   const { triggerRefresh } = usePositionsStore();
 
   const { refetch: refetchPositionFromHook } = useReadContract({
-    address: POOL_ADDRESS[84532],
+    address: POOL_ADDRESS[97],
     abi: POOL_ABI,
     functionName: "getTraderPositions",
     args: [address] as const,
@@ -296,7 +296,7 @@ export default function CountryPage() {
 
       // Open Position with ETH
       const tradeTx = await writeContract({
-        address: POOL_ADDRESS[84532],
+        address: POOL_ADDRESS[97],
         abi: POOL_ABI,
         functionName: "createMarketOrder",
         args: [
@@ -369,14 +369,14 @@ export default function CountryPage() {
         const bytes32PositionId = `0x${paddedPositionId}`;
         if (size === 100) {
           await writeContract({
-            address: POOL_ADDRESS[84532],
+            address: POOL_ADDRESS[97],
             abi: POOL_ABI,
             functionName: "closePositionId",
             args: [bytes32PositionId],
           });
         } else {
           await writeContract({
-            address: POOL_ADDRESS[84532],
+            address: POOL_ADDRESS[97],
             abi: POOL_ABI,
             functionName: "closePositionPartial",
             args: [bytes32PositionId, amount],

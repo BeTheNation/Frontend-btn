@@ -8,26 +8,10 @@
             "name": "initialize",
             "type": "address"
           },
-          {
-            "internalType": "address",
-            "name": "order",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "resolver",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "liquidity",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "oracle",
-            "type": "address"
-          }
+          { "internalType": "address", "name": "order", "type": "address" },
+          { "internalType": "address", "name": "resolver", "type": "address" },
+          { "internalType": "address", "name": "liquidity", "type": "address" },
+          { "internalType": "address", "name": "oracle", "type": "address" }
         ],
         "internalType": "struct Modularity.Modules",
         "name": "modules",
@@ -37,31 +21,11 @@
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
-  {
-    "inputs": [],
-    "name": "InvalidInitialization",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MODULARITY_NotSelf",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OnlyOrderOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "PositionDoesNotExist",
-    "type": "error"
-  },
+  { "inputs": [], "name": "InvalidInitialization", "type": "error" },
+  { "inputs": [], "name": "MODULARITY_NotSelf", "type": "error" },
+  { "inputs": [], "name": "NotInitializing", "type": "error" },
+  { "inputs": [], "name": "OnlyOrderOwner", "type": "error" },
+  { "inputs": [], "name": "PositionDoesNotExist", "type": "error" },
   {
     "anonymous": false,
     "inputs": [
@@ -100,87 +64,46 @@
     "name": "Initialized",
     "type": "event"
   },
-  {
-    "stateMutability": "payable",
-    "type": "fallback"
-  },
+  { "stateMutability": "payable", "type": "fallback" },
   {
     "inputs": [],
     "name": "MODULE_INITIALIZE",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MODULE_LIQUIDITY",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MODULE_ORACLE",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MODULE_ORDER",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "MODULE_RESOLVER",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "receiver",
-        "type": "address"
-      }
+      { "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "internalType": "address", "name": "receiver", "type": "address" }
     ],
     "name": "addLiquidity",
     "outputs": [],
@@ -197,46 +120,26 @@
     ],
     "name": "batchLiquidate",
     "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "totalRewards",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "totalRewards", "type": "uint256" }
     ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "positionId",
-        "type": "bytes32"
-      }
+      { "internalType": "bytes32", "name": "positionId", "type": "bytes32" }
     ],
     "name": "checkLiquidation",
     "outputs": [
-      {
-        "internalType": "bool",
-        "name": "eligible",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "marginRatio",
-        "type": "uint256"
-      }
+      { "internalType": "bool", "name": "eligible", "type": "bool" },
+      { "internalType": "uint256", "name": "marginRatio", "type": "uint256" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "positionId",
-        "type": "bytes32"
-      }
+      { "internalType": "bytes32", "name": "positionId", "type": "bytes32" }
     ],
     "name": "closePositionId",
     "outputs": [],
@@ -245,11 +148,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "positionId",
-        "type": "bytes32"
-      },
+      { "internalType": "bytes32", "name": "positionId", "type": "bytes32" },
       {
         "internalType": "uint256",
         "name": "closeSizeAmount",
@@ -263,79 +162,27 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "trader",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "countryId",
-        "type": "string"
-      },
-      {
-        "internalType": "uint8",
-        "name": "direction",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint8",
-        "name": "leverage",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "collateral",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "triggerPrice",
-        "type": "uint256"
-      }
+      { "internalType": "address", "name": "trader", "type": "address" },
+      { "internalType": "string", "name": "countryId", "type": "string" },
+      { "internalType": "uint8", "name": "direction", "type": "uint8" },
+      { "internalType": "uint8", "name": "leverage", "type": "uint8" },
+      { "internalType": "uint256", "name": "collateral", "type": "uint256" },
+      { "internalType": "uint256", "name": "triggerPrice", "type": "uint256" }
     ],
     "name": "createLimitOrder",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "stateMutability": "payable",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "trader",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "countryId",
-        "type": "string"
-      },
-      {
-        "internalType": "uint8",
-        "name": "direction",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint8",
-        "name": "leverage",
-        "type": "uint8"
-      }
+      { "internalType": "address", "name": "trader", "type": "address" },
+      { "internalType": "string", "name": "countryId", "type": "string" },
+      { "internalType": "uint8", "name": "direction", "type": "uint8" },
+      { "internalType": "uint8", "name": "leverage", "type": "uint8" }
     ],
     "name": "createMarketOrder",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "stateMutability": "payable",
     "type": "function"
   },
@@ -348,33 +195,17 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "positionId",
-        "type": "bytes32"
-      }
+      { "internalType": "bytes32", "name": "positionId", "type": "bytes32" }
     ],
     "name": "getCurrentPnL",
-    "outputs": [
-      {
-        "internalType": "int256",
-        "name": "",
-        "type": "int256"
-      }
-    ],
+    "outputs": [{ "internalType": "int256", "name": "", "type": "int256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "getInternalBalance",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -394,48 +225,22 @@
   {
     "inputs": [],
     "name": "getPoolBalance",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "orderId",
-        "type": "bytes32"
-      }
+      { "internalType": "bytes32", "name": "orderId", "type": "bytes32" }
     ],
     "name": "getPosition",
     "outputs": [
       {
         "components": [
-          {
-            "internalType": "address",
-            "name": "trader",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "countryId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint8",
-            "name": "direction",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8",
-            "name": "leverage",
-            "type": "uint8"
-          },
+          { "internalType": "address", "name": "trader", "type": "address" },
+          { "internalType": "string", "name": "countryId", "type": "string" },
+          { "internalType": "uint8", "name": "direction", "type": "uint8" },
+          { "internalType": "uint8", "name": "leverage", "type": "uint8" },
           {
             "internalType": "uint256",
             "name": "collateral",
@@ -456,26 +261,14 @@
             "name": "triggerPrice",
             "type": "uint256"
           },
-          {
-            "internalType": "uint8",
-            "name": "orderType",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
+          { "internalType": "uint8", "name": "orderType", "type": "uint8" },
+          { "internalType": "uint8", "name": "status", "type": "uint8" },
           {
             "internalType": "uint256",
             "name": "executionPrice",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "createdAt",
-            "type": "uint256"
-          }
+          { "internalType": "uint256", "name": "createdAt", "type": "uint256" }
         ],
         "internalType": "struct PoolStorage.Order",
         "name": "",
@@ -487,11 +280,7 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "positionId",
-        "type": "bytes32"
-      }
+      { "internalType": "bytes32", "name": "positionId", "type": "bytes32" }
     ],
     "name": "getPositionById",
     "outputs": [
@@ -502,61 +291,25 @@
             "name": "positionId",
             "type": "uint256"
           },
-          {
-            "internalType": "address",
-            "name": "trader",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "countryId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint8",
-            "name": "direction",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "size",
-            "type": "uint256"
-          },
+          { "internalType": "address", "name": "trader", "type": "address" },
+          { "internalType": "string", "name": "countryId", "type": "string" },
+          { "internalType": "uint8", "name": "direction", "type": "uint8" },
+          { "internalType": "uint256", "name": "size", "type": "uint256" },
           {
             "internalType": "uint256",
             "name": "collateral",
             "type": "uint256"
           },
-          {
-            "internalType": "uint8",
-            "name": "leverage",
-            "type": "uint8"
-          },
+          { "internalType": "uint8", "name": "leverage", "type": "uint8" },
           {
             "internalType": "uint256",
             "name": "entryPrice",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "openTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "closeTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "closePrice",
-            "type": "uint256"
-          }
+          { "internalType": "uint256", "name": "openTime", "type": "uint256" },
+          { "internalType": "uint8", "name": "status", "type": "uint8" },
+          { "internalType": "uint256", "name": "closeTime", "type": "uint256" },
+          { "internalType": "uint256", "name": "closePrice", "type": "uint256" }
         ],
         "internalType": "struct PoolStorage.Position",
         "name": "",
@@ -568,19 +321,11 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "trader",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "trader", "type": "address" }
     ],
     "name": "getTraderPositions",
     "outputs": [
-      {
-        "internalType": "bytes32[]",
-        "name": "",
-        "type": "bytes32[]"
-      },
+      { "internalType": "bytes32[]", "name": "", "type": "bytes32[]" },
       {
         "components": [
           {
@@ -588,61 +333,25 @@
             "name": "positionId",
             "type": "uint256"
           },
-          {
-            "internalType": "address",
-            "name": "trader",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "countryId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint8",
-            "name": "direction",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "size",
-            "type": "uint256"
-          },
+          { "internalType": "address", "name": "trader", "type": "address" },
+          { "internalType": "string", "name": "countryId", "type": "string" },
+          { "internalType": "uint8", "name": "direction", "type": "uint8" },
+          { "internalType": "uint256", "name": "size", "type": "uint256" },
           {
             "internalType": "uint256",
             "name": "collateral",
             "type": "uint256"
           },
-          {
-            "internalType": "uint8",
-            "name": "leverage",
-            "type": "uint8"
-          },
+          { "internalType": "uint8", "name": "leverage", "type": "uint8" },
           {
             "internalType": "uint256",
             "name": "entryPrice",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "openTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint8",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "closeTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "closePrice",
-            "type": "uint256"
-          }
+          { "internalType": "uint256", "name": "openTime", "type": "uint256" },
+          { "internalType": "uint8", "name": "status", "type": "uint8" },
+          { "internalType": "uint256", "name": "closeTime", "type": "uint256" },
+          { "internalType": "uint256", "name": "closePrice", "type": "uint256" }
         ],
         "internalType": "struct PoolStorage.Position[]",
         "name": "",
@@ -654,16 +363,8 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "string",
-        "name": "name_",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "symbol_",
-        "type": "string"
-      }
+      { "internalType": "string", "name": "name_", "type": "string" },
+      { "internalType": "string", "name": "symbol_", "type": "string" }
     ],
     "name": "initialize",
     "outputs": [],
@@ -672,48 +373,25 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "positionId",
-        "type": "bytes32"
-      }
+      { "internalType": "bytes32", "name": "positionId", "type": "bytes32" }
     ],
     "name": "liquidatePosition",
     "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "reward",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "reward", "type": "uint256" }
     ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "shares",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "receiver",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
+      { "internalType": "uint256", "name": "shares", "type": "uint256" },
+      { "internalType": "address", "name": "receiver", "type": "address" },
+      { "internalType": "address", "name": "owner", "type": "address" }
     ],
     "name": "removeLiquidity",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
-  {
-    "stateMutability": "payable",
-    "type": "receive"
-  }
+  { "stateMutability": "payable", "type": "receive" }
 ]
