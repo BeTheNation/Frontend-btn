@@ -214,18 +214,18 @@ export default function EventDetailPage() {
         throw new Error("Wallet not connected");
       }
 
-      // Check ETH balance
+      // Check tBNB balance
       if (
         !walletBalance ||
         Number(formatUnits(walletBalance.value, walletBalance.decimals)) <
           Number(bet.amount)
       ) {
         throw new Error(
-          `Insufficient ETH balance. Required: ${bet.amount} ETH, Available: ${
+          `Insufficient tBNB balance. Required: ${bet.amount} tBNB, Available: ${
             walletBalance
               ? formatUnits(walletBalance.value, walletBalance.decimals)
               : "0"
-          } ETH`
+          } tBNB`
         );
       }
 
@@ -234,7 +234,7 @@ export default function EventDetailPage() {
         throw new Error("Bet amount must be greater than 0");
       }
 
-      // Convert ETH amount to wei
+      // Convert tBNB amount to wei
       const amountInWei = parseUnits(bet.amount, 18);
 
       console.log("Placing bet with parameters:", {
@@ -259,7 +259,7 @@ export default function EventDetailPage() {
         // Continue if position doesn't exist or check fails
       }
 
-      // Place Bet with ETH
+      // Place Bet with tBNB
       const betTx = await writeContract({
         address: PREDICTION_ADDRESS[84532],
         abi: PREDICTION_ABI,

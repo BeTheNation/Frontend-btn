@@ -233,20 +233,20 @@ export default function CountryPage() {
         throw new Error("Wallet not connected");
       }
 
-      // Check ETH balance
+      // Check tBNB balance
       if (
         !walletBalance ||
         Number(formatUnits(walletBalance.value, walletBalance.decimals)) <
           Number(position.size)
       ) {
         throw new Error(
-          `Insufficient ETH balance. Required: ${
+          `Insufficient tBNB balance. Required: ${
             position.size
-          } ETH, Available: ${
+          } tBNB, Available: ${
             walletBalance
               ? formatUnits(walletBalance.value, walletBalance.decimals)
               : "0"
-          } ETH`
+          } tBNB`
         );
       }
 

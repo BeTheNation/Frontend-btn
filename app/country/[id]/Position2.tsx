@@ -175,7 +175,7 @@ const TradingPositionsDashboard = ({ myPositions, closePosition }: any) => {
                                 Size:
                               </span>
                               <span className="text-white transition-all duration-300">
-                                {formatUnits(position.size, 18)} ETH
+                                {formatUnits(position.size, 18)} tBNB
                               </span>
                             </div>
                             <div className="flex justify-between">
