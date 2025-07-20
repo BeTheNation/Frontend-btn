@@ -227,7 +227,7 @@ const TradingPanel = ({
               className={`flex-1 bg-transparent text-left outline-none border-none text-gray-200 text-xl font-semibold font-['Inter'] leading-tight min-w-0`}
             />
             <div className="text-[#d6d6d6] text-lg sm:text-xl font-bold font-['Inter'] leading-tight whitespace-nowrap">
-              USDC
+              tBNB
             </div>
           </div>
           {/* Input entry price on limit order */}
